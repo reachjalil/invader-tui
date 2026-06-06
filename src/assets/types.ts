@@ -59,6 +59,91 @@ export type ShipStats = StatBlock & {
   powerUpAffinity: number;
 };
 
+export type ShipClassId = "bar" | "delta" | "ring" | "wedge";
+
+export type ShipModuleCategory =
+  | "wing"
+  | "pod"
+  | "cannon"
+  | "reactor"
+  | "engine"
+  | "shield"
+  | "armor"
+  | "autopilot";
+
+export type ShipStatKey =
+  | "hull"
+  | "shield"
+  | "speed"
+  | "turnRate"
+  | "weaponSlots"
+  | "projectileDamage"
+  | "fireRate"
+  | "spread"
+  | "powerUpAffinity";
+
+export type ShipStatModifiers = Partial<Record<ShipStatKey, number>>;
+
+export type ShipPaintScheme = {
+  id: string;
+  name: string;
+  tone: Tone;
+  role: string;
+  statModifiers: ShipStatModifiers;
+};
+
+export type ShipModule = {
+  id: string;
+  name: string;
+  category: ShipModuleCategory;
+  tone: Tone;
+  marker: string;
+  role: string;
+  statModifiers: ShipStatModifiers;
+  weaponName?: string;
+};
+
+export type ShipCosmeticSlotId = "nose" | "leftWing" | "rightWing" | "tail" | "interior";
+
+export type ShipCosmeticPart = {
+  id: string;
+  name: string;
+  slotId: ShipCosmeticSlotId;
+  tone: Tone;
+  marker: string;
+  role: string;
+  statModifiers: ShipStatModifiers;
+};
+
+export type ShipDesign = {
+  id: string;
+  name: string;
+  classId: ShipClassId;
+  paintId: string;
+  modules: Record<string, string>;
+  cosmetics?: Record<string, string>;
+};
+
+export type ResolvedShipModuleSlot = {
+  point: AttachmentPoint;
+  module?: ShipModule;
+};
+
+export type ResolvedShipDesign = {
+  id: string;
+  name: string;
+  classId: ShipClassId;
+  className: string;
+  chassis: ShipVariant;
+  paint: ShipPaintScheme;
+  slots: ResolvedShipModuleSlot[];
+  cosmetics: ShipCosmeticPart[];
+  stats: ShipStats;
+  weaponName: string;
+  description: string;
+  variant: ShipVariant;
+};
+
 export type EnemyVariant = GameAssetVariant & {
   stats: EnemyStats;
   idle?: [SpriteFrame, SpriteFrame];

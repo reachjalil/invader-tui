@@ -1,7 +1,7 @@
 import type { KitchenSinkRenderOptions } from "../sim/state.js";
 import { buildKitchenSinkState } from "../sim/state.js";
 import { hstack, normalizeFrame, splitRatioWidths } from "../tui/layout.js";
-import { enemySpecies, shipFamily } from "../assets/index.js";
+import { enemySpecies, shipDesignPresets, shipFamily } from "../assets/index.js";
 import type { GameAssetVariant } from "../assets/index.js";
 import {
   renderBars,
@@ -11,7 +11,8 @@ import {
   renderShipGrid,
   renderLoading,
   renderBorders,
-  renderBackgrounds
+  renderBackgrounds,
+  renderShipDesignBuilder
 } from "./widgets.js";
 
 export type { KitchenSinkRenderOptions };
@@ -61,15 +62,24 @@ export function renderKitchenSink(options: KitchenSinkRenderOptions): string {
   const neededShipGridHeight = calculateGridHeight(shipFamily.variants, assetWidths[1]!);
   const rightConfigHeight = Math.max(6, middleHeight - neededShipGridHeight);
   const actualShipGridHeight = middleHeight - rightConfigHeight;
+  const design = shipDesignPresets[state.selectedDesignIndex % shipDesignPresets.length]!;
 
   const leftCol = [
     renderEnemyGrid(assetWidths[0]!, actualEnemyGridHeight, state, color),
     renderBackgrounds(assetWidths[0]!, leftConfigHeight, state, color)
   ].join("\n");
-  const rightCol = [
-    renderShipGrid(assetWidths[1]!, actualShipGridHeight, state, color),
-    renderBorders(assetWidths[1]!, rightConfigHeight, state, color)
-  ].join("\n");
+  const rightCol = state.focus === "designs"
+    ? renderShipDesignBuilder(assetWidths[1]!, middleHeight, {
+        design,
+        activeSection: "gun",
+        activeSlotIndex: state.selectedBuilderSlotIndex,
+        tick: state.tick,
+        showControls: false
+      }, color)
+    : [
+      renderShipGrid(assetWidths[1]!, actualShipGridHeight, state, color),
+      renderBorders(assetWidths[1]!, rightConfigHeight, state, color)
+    ].join("\n");
   
   sections.push(hstack([leftCol, rightCol], 1));
 
@@ -77,4 +87,3 @@ export function renderKitchenSink(options: KitchenSinkRenderOptions): string {
   sections.push(renderFooter(width, state, color));
   return normalizeFrame(sections.join("\n"), width, height);
 }
-

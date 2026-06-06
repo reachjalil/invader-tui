@@ -1,6 +1,6 @@
-import { enemySpecies, shipFamily } from "../assets/index.js";
+import { enemySpecies, shipDesignPresets, shipFamily } from "../assets/index.js";
 
-export type KitchenSinkFocus = "enemies" | "ships" | "counters";
+export type KitchenSinkFocus = "enemies" | "ships" | "designs" | "counters";
 
 export type BorderStyle = "single" | "double" | "heavy" | "arcade" | "block" | "ornamental" | "cyberpunk" | "dashed" | "terminal" | "cryptic";
 export type BackgroundStyle =
@@ -29,6 +29,8 @@ export type KitchenSinkState = {
   paused: boolean;
   selectedEnemyIndex: number;
   selectedShipIndex: number;
+  selectedDesignIndex: number;
+  selectedBuilderSlotIndex: number;
   focus: KitchenSinkFocus;
   borderStyle: BorderStyle;
   backgroundStyle: BackgroundStyle;
@@ -54,6 +56,8 @@ export function buildKitchenSinkState(options: KitchenSinkRenderOptions): Kitche
   const tick = Math.max(0, Math.floor(options.tick ?? 0));
   const selectedEnemyIndex = Math.floor(tick / 4) % enemySpecies.variants.length;
   const selectedShipIndex = Math.floor(tick / 5) % shipFamily.variants.length;
+  const selectedDesignIndex = Math.floor(tick / 9) % shipDesignPresets.length;
+  const selectedBuilderSlotIndex = Math.floor(tick / 7);
   const wave = 1 + Math.floor(tick / 40);
   const combo = 1 + (Math.floor(tick / 7) % 9);
   const shotsFired = 24 + tick * 3;
@@ -70,6 +74,8 @@ export function buildKitchenSinkState(options: KitchenSinkRenderOptions): Kitche
     paused: options.paused ?? false,
     selectedEnemyIndex,
     selectedShipIndex,
+    selectedDesignIndex,
+    selectedBuilderSlotIndex,
     focus: options.focus ?? "enemies",
     borderStyle,
     backgroundStyle,

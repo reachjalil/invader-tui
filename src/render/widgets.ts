@@ -1,6 +1,31 @@
-import { enemySpecies, shipFamily, type GameAssetVariant } from "../assets/index.js";
-import { fitAnsi, joinAligned, rgb, theme, truncate } from "../tui/ansi.js";
-import { box, borderStyles } from "../tui/layout.js";
+import {
+  buildDefaultShipDesign,
+  enemySpecies,
+  getCompatibleModulesForSlot,
+  getCosmeticPartsForSlot,
+  getModulesForDesignSlot,
+  getShipClassConfig,
+  getSelectedCosmeticPart,
+  getSelectedDesignModule,
+  resolveShipDesign,
+  shipCallsigns,
+  shipClassConfigs,
+  shipCosmeticSlots,
+  shipDesignModuleSlots,
+  shipFamily,
+  shipPaintSchemes,
+  type GameAssetVariant,
+  type ShipCosmeticPart,
+  type ShipCosmeticSlot,
+  type ShipCosmeticSlotId,
+  type ShipDesign,
+  type ShipDesignModuleSlot,
+  type ShipDesignModuleSlotId,
+  type ShipModule,
+  type ShipStatKey
+} from "../assets/index.js";
+import { fitAnsi, joinAligned, rgb, theme, truncate, visibleLength } from "../tui/ansi.js";
+import { box, borderStyles, hstack, splitRatioWidths } from "../tui/layout.js";
 import type { KitchenSinkFocus, KitchenSinkState, BorderStyle, BackgroundStyle } from "../sim/state.js";
 import { renderSprite } from "./sprites.js";
 
@@ -11,7 +36,7 @@ function focusMark(focus: KitchenSinkFocus, panel: KitchenSinkFocus): string {
 export function renderFooter(width: number, state: KitchenSinkState, color = true): string {
   return box(
     "",
-    ["[q] Quit   [p] Pause   [b] Border Style   [v] Background"],
+    ["[q] Quit   [p] Pause   [t] Focus   [b] Border Style   [v] Background"],
     { width, height: 3, color, accent: theme.border, paddingX: 1 }
   );
 }
@@ -54,6 +79,9 @@ export type ArcadeHudState = {
   shield: number;
   maxShield: number;
   shieldActive: boolean;
+  gameMode?: string;
+  specialName?: string;
+  specialCharge?: number;
   boss?: {
     name: string;
     hp: number;
@@ -95,6 +123,15 @@ export function renderArcadeHud(width: number, state: ArcadeHudState, color = tr
     fitAnsi(scoreLine, width),
     fitAnsi(levelLine, width)
   ];
+
+  if (state.gameMode || state.specialName) {
+    const modeText = `${rgb("MODE", state.gameMode === "TURBO" ? theme.amber : theme.cyan, color)} ${state.gameMode ?? "CLASSIC"}`;
+    const specialCharge = Math.max(0, Math.min(100, Math.round(state.specialCharge ?? 0)));
+    const specialText = state.specialName
+      ? `${rgb("SPEC", specialCharge >= 100 ? theme.lime : theme.amber, color)} ${state.specialName} ${String(specialCharge).padStart(3, "0")}%`
+      : "";
+    rows.push(fitAnsi(joinAligned(modeText, specialText, width, 3), width));
+  }
 
   if (state.boss) {
     const bossName = truncate(state.boss.name.toUpperCase(), 18);
@@ -158,6 +195,264 @@ export function renderShipGrid(width: number, height: number, state: KitchenSink
   const tiles = shipFamily.variants.map((variant, index) => renderAssetTile(variant, index === state.selectedShipIndex, Math.floor((contentWidth - columns + 1) / columns), color, state.tick % 2));
   const rows = gridTiles(tiles, contentWidth, columns);
   return box(`${focusMark(state.focus, "ships")} Ships - ${shipFamily.displayName}`, rows, { width, height, color, accent: theme.cyan, paddingX: 1, titleAlign: "left" });
+}
+
+export type ShipBuilderSection = "color" | ShipCosmeticSlotId | ShipDesignModuleSlotId | "callsign";
+
+export type ShipBuilderRenderState = {
+  design: ShipDesign;
+  activeSection?: ShipBuilderSection;
+  activeSlotIndex?: number;
+  level?: number;
+  tick?: number;
+  showControls?: boolean;
+};
+
+function centerAnsi(text: string, width: number): string {
+  const len = visibleLength(text);
+  if (len >= width) return truncate(text, width);
+  const left = Math.floor((width - len) / 2);
+  return fitAnsi(`${" ".repeat(left)}${text}`, width);
+}
+
+function sectionLabel(label: string, active: boolean, width: number, color = true): string {
+  const marker = active ? ">" : " ";
+  const text = `${marker} ${label}`;
+  return fitAnsi(active ? rgb(text, theme.amber, color) : rgb(text, theme.muted, color), width);
+}
+
+function selectedRows<T>(
+  items: T[],
+  selectedIndex: number,
+  maxRows: number,
+  render: (item: T, index: number, selected: boolean) => string
+): string[] {
+  if (items.length <= maxRows) {
+    return items.map((item, index) => render(item, index, index === selectedIndex));
+  }
+  const clamped = Math.max(0, Math.min(items.length - 1, selectedIndex));
+  const start = Math.max(0, Math.min(items.length - maxRows, clamped - Math.floor(maxRows / 2)));
+  return items.slice(start, start + maxRows).map((item, offset) => {
+    const index = start + offset;
+    return render(item, index, index === selectedIndex);
+  });
+}
+
+function statCell(label: string, value: number, baseline: number, tone: keyof typeof theme, color = true): string {
+  const current = Math.round(value);
+  const delta = current - Math.round(baseline);
+  const deltaText = delta === 0 ? "..." : delta > 0 ? `+${delta}` : String(delta);
+  const deltaTone = delta === 0 ? theme.muted : delta > 0 ? theme.green : theme.red;
+  return `${rgb(label.padEnd(4), theme[tone], color)} ${String(current).padStart(3, "0")} ${rgb(deltaText.padStart(4), deltaTone, color)}`;
+}
+
+function renderDesignStats(design: ShipDesign, width: number, color = true, level = 1): string[] {
+  const resolved = resolveShipDesign(design, level);
+  const baseline = resolveShipDesign(buildDefaultShipDesign(design.classId), level);
+  const stats = resolved.stats;
+  const baselineStats = baseline.stats;
+  const cells: Array<[string, ShipStatKey, keyof typeof theme]> = [
+    ["HULL", "hull", "green"],
+    ["SHLD", "shield", "blue"],
+    ["SPD", "speed", "amber"],
+    ["TURN", "turnRate", "lime"],
+    ["DMG", "projectileDamage", "red"],
+    ["RATE", "fireRate", "cyan"],
+    ["SPRD", "spread", "purple"],
+    ["STAR", "powerUpAffinity", "white"]
+  ];
+  const rows: string[] = [];
+  for (let index = 0; index < cells.length; index += 2) {
+    const left = cells[index]!;
+    const right = cells[index + 1]!;
+    rows.push(
+      joinAligned(
+        statCell(left[0], stats[left[1]], baselineStats[left[1]], left[2], color),
+        statCell(right[0], stats[right[1]], baselineStats[right[1]], right[2], color),
+        width,
+        2
+      )
+    );
+  }
+  return [
+    ...rows
+  ].map((line) => fitAnsi(line, width));
+}
+
+function renderModuleOptionRows(
+  modules: ShipModule[],
+  currentModuleId: string | undefined,
+  width: number,
+  color = true,
+  maxRows = 3
+): string[] {
+  const options: Array<ShipModule | undefined> = [undefined, ...modules];
+  const selectedIndex = Math.max(0, options.findIndex((module) => module?.id === currentModuleId));
+  return selectedRows(options, selectedIndex, maxRows, (module, _index, selected) => {
+    const marker = selected ? "■" : "▪";
+    const name = module ? module.name : "Empty hardpoint";
+    const category = module ? module.category.toUpperCase() : "OPEN";
+    const tone = module ? theme[module.tone] : theme.muted;
+    const line = `${marker} ${fitAnsi(name, Math.max(6, width - 13))} ${category}`;
+    return fitAnsi(selected ? rgb(line, tone, color) : rgb(line, theme.muted, color), width);
+  });
+}
+
+function renderCosmeticOptionRows(
+  parts: ShipCosmeticPart[],
+  currentPartId: string | undefined,
+  width: number,
+  color = true,
+  maxRows = 4
+): string[] {
+  const selectedIndex = Math.max(0, parts.findIndex((part) => part.id === currentPartId));
+  return selectedRows(parts, selectedIndex, maxRows, (part, _index, selected) => {
+    const marker = selected ? "■" : "▪";
+    const statText = Object.entries(part.statModifiers)
+      .map(([key, value]) => `${value > 0 ? "+" : ""}${value} ${key.toUpperCase().slice(0, 4)}`)
+      .slice(0, 1)
+      .join("");
+    const suffix = statText ? statText : part.marker === " " ? "HOLE" : part.marker;
+    const line = `${marker} ${fitAnsi(part.name, Math.max(6, width - 10))} ${suffix}`;
+    return fitAnsi(selected ? rgb(line, theme[part.tone], color) : rgb(line, theme.muted, color), width);
+  });
+}
+
+function renderPaintOptionRows(currentPaintId: string, width: number, color = true, maxRows = 7): string[] {
+  const selectedIndex = Math.max(0, shipPaintSchemes.findIndex((paint) => paint.id === currentPaintId));
+  return selectedRows(shipPaintSchemes, selectedIndex, maxRows, (paint, _index, selected) => {
+    const marker = selected ? "■" : "▪";
+    const line = `${marker} ${fitAnsi(paint.name, Math.max(6, width - 4))}`;
+    return fitAnsi(selected ? rgb(line, theme[paint.tone], color) : rgb(line, theme.muted, color), width);
+  });
+}
+
+function renderCallsignOptionRows(currentName: string, width: number, color = true, maxRows = 6): string[] {
+  const callsigns = [...shipCallsigns];
+  const selectedIndex = Math.max(0, callsigns.findIndex((callsign) => callsign === currentName));
+  return selectedRows(callsigns, selectedIndex, maxRows, (callsign, _index, selected) => {
+    const marker = selected ? "■" : "▪";
+    const line = `${marker} ${callsign}`;
+    return fitAnsi(selected ? rgb(line, theme.white, color) : rgb(line, theme.muted, color), width);
+  });
+}
+
+function getBuilderModuleSection(section: ShipBuilderSection): ShipDesignModuleSlot | undefined {
+  return shipDesignModuleSlots.find((slot) => slot.id === section);
+}
+
+function getBuilderCosmeticSection(section: ShipBuilderSection): ShipCosmeticSlot | undefined {
+  return shipCosmeticSlots.find((slot) => slot.id === section);
+}
+
+function groupLabel(label: string, width: number, color = true): string {
+  return fitAnsi(rgb(label, theme.cyan, color), width);
+}
+
+function renderBuildRow(label: string, value: string, active: boolean, width: number, tone: keyof typeof theme = "muted", color = true): string {
+  const marker = active ? ">" : " ";
+  const labelWidth = Math.max(5, Math.min(11, Math.floor(width * 0.34)));
+  const line = `${marker} ${fitAnsi(label, labelWidth)} ${value}`;
+  return fitAnsi(active ? rgb(line, theme[tone], color) : rgb(line, theme.muted, color), width);
+}
+
+export function renderShipDesignBuilder(width: number, height: number, state: ShipBuilderRenderState, color = true): string {
+  const safeHeight = Math.max(12, Math.floor(height));
+  const contentWidth = Math.max(8, width - 4);
+  const resolved = resolveShipDesign(state.design, state.level ?? 1);
+  const activeSection = state.activeSection ?? "color";
+  const activeSlotIndex = Math.max(0, Math.min(resolved.slots.length - 1, state.activeSlotIndex ?? 0));
+  const activeSlot = resolved.slots[activeSlotIndex];
+  const wide = contentWidth >= 54;
+  const [leftWidth, rightWidth] = wide
+    ? splitRatioWidths(contentWidth, [34, 48], 1, [25, 24])
+    : [contentWidth, contentWidth];
+  const paint = shipPaintSchemes.find((candidate) => candidate.id === state.design.paintId) ?? shipPaintSchemes[0]!;
+  const cosmeticRows = shipCosmeticSlots.map((slot) => {
+    const part = getSelectedCosmeticPart(state.design, slot.id);
+    return renderBuildRow(slot.shortLabel, part.name, activeSection === slot.id, leftWidth!, part.tone, color);
+  });
+  const moduleRows = shipDesignModuleSlots.map((slot) => {
+    const module = getSelectedDesignModule(state.design, slot.id);
+    return renderBuildRow(slot.shortLabel, module?.name ?? "Stock", activeSection === slot.id, leftWidth!, module?.tone ?? "muted", color);
+  });
+
+  const leftRows = [
+    fitAnsi(`${rgb("BASE", theme.cyan, color)} ${resolved.className}`, leftWidth!),
+    groupLabel("BUILD OPTIONS", leftWidth!, color),
+    groupLabel("FRAME", leftWidth!, color),
+    renderBuildRow("COLOR", paint.name, activeSection === "color", leftWidth!, paint.tone, color),
+    ...cosmeticRows,
+    groupLabel("EQUIPMENT", leftWidth!, color),
+    ...moduleRows,
+    groupLabel("PILOT", leftWidth!, color),
+    renderBuildRow("NAME", state.design.name, activeSection === "callsign", leftWidth!, "white", color)
+  ];
+
+  if (state.showControls) {
+    leftRows.push(
+      fitAnsi(rgb("W/S row  A/D option", theme.muted, color), leftWidth!),
+      fitAnsi(rgb("Enter launch  Space back", theme.cyan, color), leftWidth!),
+      fitAnsi(rgb("N preset  R stock", theme.muted, color), leftWidth!)
+    );
+  }
+
+  const spriteRows = renderSprite(resolved.variant, color, state.tick ?? 0).map((line) => centerAnsi(line, rightWidth!));
+  const activeBuildSlot = getBuilderModuleSection(activeSection);
+  const activeCosmeticSlot = getBuilderCosmeticSection(activeSection);
+  const selectedModule = activeBuildSlot ? getSelectedDesignModule(state.design, activeBuildSlot.id) : undefined;
+  const selectedCosmetic = activeCosmeticSlot ? getSelectedCosmeticPart(state.design, activeCosmeticSlot.id) : undefined;
+  const optionRows = activeSection === "color"
+    ? renderPaintOptionRows(state.design.paintId, rightWidth!, color, 4)
+    : activeSection === "callsign"
+      ? renderCallsignOptionRows(state.design.name, rightWidth!, color, 4)
+      : activeCosmeticSlot
+        ? renderCosmeticOptionRows(getCosmeticPartsForSlot(activeCosmeticSlot.id), selectedCosmetic?.id, rightWidth!, color, 4)
+        : activeBuildSlot
+          ? renderModuleOptionRows(getModulesForDesignSlot(activeBuildSlot.id), selectedModule?.id, rightWidth!, color, 4)
+          : [];
+  const activeDescription = activeSection === "color"
+    ? paint.role
+    : activeSection === "callsign"
+      ? "Pilot callsign shown on ship reports."
+      : activeCosmeticSlot
+        ? selectedCosmetic?.role ?? activeCosmeticSlot.role
+        : selectedModule?.role ?? activeBuildSlot?.role ?? "Choose a build option.";
+  const optionHeading = activeSection === "color"
+    ? "COLORS"
+    : activeSection === "callsign"
+      ? "CALLSIGNS"
+      : activeCosmeticSlot
+        ? activeCosmeticSlot.label.toUpperCase()
+        : activeBuildSlot?.label.toUpperCase() ?? "OPTIONS";
+  const hardpointRows = selectedRows(resolved.slots, activeSlotIndex, 4, (slot) => {
+    const moduleName = slot.module?.name ?? "Stock";
+    const tone = slot.module ? theme[slot.module.tone] : theme.muted;
+    return fitAnsi(rgb(`${slot.point.label}: ${moduleName}`, tone, color), rightWidth!);
+  });
+
+  const rightRows = [
+    centerAnsi(rgb(resolved.name.toUpperCase(), theme.white, color), rightWidth!),
+    centerAnsi(rgb(`${resolved.className} L${state.level ?? 1}`, theme.muted, color), rightWidth!),
+    ...spriteRows,
+    ...renderDesignStats(state.design, rightWidth!, color, state.level ?? 1),
+    fitAnsi(rgb("VISIBLE HARDPOINTS", theme.cyan, color), rightWidth!),
+    ...hardpointRows,
+    fitAnsi(rgb(optionHeading, theme.amber, color), rightWidth!),
+    ...optionRows,
+    fitAnsi(rgb(activeDescription, theme.muted, color), rightWidth!)
+  ];
+
+  const rows = wide ? hstack([leftRows.join("\n"), rightRows.join("\n")], 1).split("\n") : [...leftRows, "", ...rightRows];
+  return box(" SHIP BUILDER ", rows, {
+    width,
+    height: safeHeight,
+    color,
+    accent: activeSection === "color" ? theme[paint.tone] : theme.cyan,
+    borderStyle: "arcade",
+    paddingX: 1,
+    titleAlign: "left"
+  });
 }
 
 function buildBrailleProgressBar(percent: number, width: number): string {

@@ -2,7 +2,7 @@
 import { renderKitchenSink, type KitchenSinkRenderOptions } from "./render/kitchenSink.js";
 import type { KitchenSinkFocus, BorderStyle, BackgroundStyle } from "./sim/state.js";
 
-const focusOrder: KitchenSinkFocus[] = ["enemies", "ships", "counters"];
+const focusOrder: KitchenSinkFocus[] = ["enemies", "ships", "designs", "counters"];
 
 process.stdout.on("error", (error: NodeJS.ErrnoException) => {
   if (error.code === "EPIPE") process.exit(0);
@@ -63,7 +63,7 @@ function start(options: KitchenSinkRenderOptions): void {
   }
   let tick = options.tick ?? 0;
   let paused = false;
-  let focusIndex = 0;
+  let focusIndex = Math.max(0, focusOrder.indexOf(options.focus ?? "enemies"));
   let closed = false;
 
   let borderIndex = 0;
@@ -127,6 +127,8 @@ function start(options: KitchenSinkRenderOptions): void {
       borderIndex = (borderIndex + 1) % borderStyles.length;
     } else if (keyText === "v") {
       backgroundIndex = (backgroundIndex + 1) % backgroundStyles.length;
+    } else if (keyText === "t" || keyText === "\t") {
+      focusIndex = (focusIndex + 1) % focusOrder.length;
     } else if (keyText === "f") {
       // Fire/step tick manually
       tick += 1;
