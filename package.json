@@ -1,0 +1,21 @@
+{
+  "name": "invader-tui",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "bin": {
+    "invader-tui": "./src/cli.ts"
+  },
+  "scripts": {
+    "start": "tsx src/cli.ts start",
+    "snapshot": "tsx src/cli.ts snapshot",
+    "check": "tsc --noEmit",
+    "test": "vitest run"
+  },
+  "devDependencies": {
+    "@types/node": "^24.0.0",
+    "tsx": "^4.20.0",
+    "typescript": "^5.8.0",
+    "vitest": "^3.2.0"
+  }
+}
