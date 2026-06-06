@@ -1107,9 +1107,7 @@ function renderMissionResult(result: "gameover" | "victory"): string {
     `${statCell("STARS", String(upgradePoints), theme.amber, 8)}   ${statCell("BUGS", String(enemiesDestroyed), theme.red, 8)}   ${statCell("ACC", `${accuracy}%`, theme.green, 5)}`
   ];
   const reportRows = [
-    "",
     ...bannerLines.map((line) => centerText(line, innerWidth)),
-    "",
     centerText(rgb(won ? "THE INVASION LINE IS CLEAR" : gameOverReason.toUpperCase(), won ? theme.green : theme.red, colorEnabled), innerWidth),
     "",
     rgb("─".repeat(innerWidth), theme.border, colorEnabled),
@@ -1119,9 +1117,7 @@ function renderMissionResult(result: "gameover" | "victory"): string {
     centerText(bold(rgb(rank, won ? theme.amber : theme.slate, colorEnabled), colorEnabled), innerWidth),
     "",
     rgb("─".repeat(innerWidth), theme.border, colorEnabled),
-    "",
-    centerText(bold(rgb("R: RESTART     Q: QUIT", theme.cyan, colorEnabled), colorEnabled), innerWidth),
-    ""
+    centerText(bold(rgb("R: RESTART     Q: QUIT", theme.cyan, colorEnabled), colorEnabled), innerWidth)
   ];
   const resultHeight = 24;
   const resultContentHeight = resultHeight - 2;
