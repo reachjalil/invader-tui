@@ -11,16 +11,16 @@ export const shipFamily: ShipFamily = {
       name: "Bar Chassis L1",
       role: "base light frigate",
       tone: "cyan",
-      sprite: { width: 7, height: 3, lines: ["  /^\\  ", "<==|==>", "  \\v/  "] },
+      sprite: { width: 4, height: 2, lines: ["⣴⣿⣦⠀", "⢨⠿⡅⠀"] },
       idle: [
-        { width: 7, height: 3, lines: ["  /^\\  ", "<==|==>", "  \\v/  "] },
-        { width: 7, height: 3, lines: ["  /+\\  ", "<==|==>", "  \\v/  "] }
+        { width: 4, height: 2, lines: ["⣴⣿⣦⠀", "⢨⠿⡅⠀"] },
+        { width: 4, height: 2, lines: ["⣴⣿⣦⠀", "⢨⠿⡅⠀"] }
       ],
       tags: ["light", "base", "bar"],
       attachmentPoints: [
         { id: "left", label: "Left Wing", x: 0, y: 1, accepts: ["wing", "pod"] },
-        { id: "core", label: "Core Sector", x: 3, y: 1, accepts: ["cannon", "reactor", "engine"] },
-        { id: "right", label: "Right Wing", x: 6, y: 1, accepts: ["wing", "pod"] }
+        { id: "core", label: "Core Sector", x: 1, y: 0, accepts: ["cannon", "reactor", "engine"] },
+        { id: "right", label: "Right Wing", x: 2, y: 1, accepts: ["wing", "pod"] }
       ],
       stats: {
         hull: 40,
@@ -40,16 +40,16 @@ export const shipFamily: ShipFamily = {
       name: "Bar Chassis L2",
       role: "heavy long cruiser",
       tone: "cyan",
-      sprite: { width: 7, height: 4, lines: ["  /^\\  ", "<==#==>", "  |v|  ", "  /_\\  "] },
+      sprite: { width: 4, height: 3, lines: ["⣴⣿⣦⠀", "⢿⣤⡿⠀", "⢰⠛⡆⠀"] },
       idle: [
-        { width: 7, height: 4, lines: ["  /^\\  ", "<==#==>", "  |v|  ", "  /_\\  "] },
-        { width: 7, height: 4, lines: ["  /+\\  ", "<==#==>", "  |v|  ", "  /_\\  "] }
+        { width: 4, height: 3, lines: ["⣴⣿⣦⠀", "⢿⣤⡿⠀", "⢰⠛⡆⠀"] },
+        { width: 4, height: 3, lines: ["⣴⣿⣦⠀", "⢿⣤⡿⠀", "⢰⠛⡆⠀"] }
       ],
       tags: ["medium", "interceptor", "bar"],
       attachmentPoints: [
         { id: "left", label: "Left Wing", x: 0, y: 1, accepts: ["wing", "pod", "cannon"] },
-        { id: "core", label: "Core Sector", x: 3, y: 1, accepts: ["cannon", "reactor", "engine"] },
-        { id: "right", label: "Right Wing", x: 6, y: 1, accepts: ["wing", "pod", "cannon"] }
+        { id: "core", label: "Core Sector", x: 1, y: 2, accepts: ["cannon", "reactor", "engine"] },
+        { id: "right", label: "Right Wing", x: 2, y: 1, accepts: ["wing", "pod", "cannon"] }
       ],
       stats: {
         hull: 60,
@@ -69,17 +69,17 @@ export const shipFamily: ShipFamily = {
       name: "Bar Chassis L3",
       role: "colossal heavy frigate",
       tone: "cyan",
-      sprite: { width: 9, height: 4, lines: ["  /^^^\\  ", "<==[#]==>", "  \\vvv/  ", "   /_\\   "] },
+      sprite: { width: 5, height: 3, lines: ["⣧⠾⠿⠷⣼", "⢿⢟⣛⡻⡿", "⠘⢾⣿⡷⠃"] },
       idle: [
-        { width: 9, height: 4, lines: ["  /^^^\\  ", "<==[#]==>", "  \\vvv/  ", "   /_\\   "] },
-        { width: 9, height: 4, lines: ["  /+++\\  ", "<==[#]==>", "  \\vvv/  ", "   /_\\   "] }
+        { width: 5, height: 3, lines: ["⣧⠾⠿⠷⣼", "⢿⢟⣛⡻⡿", "⠘⢾⣿⡷⠃"] },
+        { width: 5, height: 3, lines: ["⣧⠾⠿⠷⣼", "⢿⢟⣛⡻⡿", "⠘⢾⣿⡷⠃"] }
       ],
       tags: ["heavy", "assault", "bar"],
       attachmentPoints: [
-        { id: "left-heavy", label: "Left Cannons", x: 0, y: 1, accepts: ["cannon", "shield", "wing"] },
-        { id: "core-left", label: "Reactor A", x: 3, y: 1, accepts: ["reactor", "autopilot", "engine"] },
-        { id: "core-right", label: "Reactor B", x: 5, y: 1, accepts: ["reactor", "autopilot", "engine"] },
-        { id: "right-heavy", label: "Right Cannons", x: 8, y: 1, accepts: ["cannon", "shield", "wing"] }
+        { id: "left-heavy", label: "Left Cannons", x: 0, y: 1, accepts: ["cannon", "shield"] },
+        { id: "core-left", label: "Reactor A", x: 1, y: 2, accepts: ["reactor", "autopilot"] },
+        { id: "core-right", label: "Reactor B", x: 3, y: 2, accepts: ["reactor", "autopilot"] },
+        { id: "right-heavy", label: "Right Cannons", x: 4, y: 1, accepts: ["cannon", "shield"] }
       ],
       stats: {
         hull: 90,
@@ -101,16 +101,16 @@ export const shipFamily: ShipFamily = {
       name: "Delta Chassis L1",
       role: "light delta-wing scout",
       tone: "blue",
-      sprite: { width: 7, height: 3, lines: ["   ^   ", "  /#\\  ", " /___\\ "] },
+      sprite: { width: 4, height: 2, lines: ["⣠⣾⣷⣄", "⢏⠀⠀⡹"] },
       idle: [
-        { width: 7, height: 3, lines: ["   ^   ", "  /#\\  ", " /___\\ "] },
-        { width: 7, height: 3, lines: ["   +   ", "  /#\\  ", " /___\\ "] }
+        { width: 4, height: 2, lines: ["⣠⣾⣷⣄", "⢏⠀⠀⡹"] },
+        { width: 4, height: 2, lines: ["⣠⣾⣷⣄", "⢏⠀⠀⡹"] }
       ],
       tags: ["light", "scout", "delta"],
       attachmentPoints: [
-        { id: "left", label: "Left Wing", x: 1, y: 2, accepts: ["wing", "pod"] },
-        { id: "core", label: "Core Sector", x: 3, y: 1, accepts: ["cannon", "reactor", "engine"] },
-        { id: "right", label: "Right Wing", x: 5, y: 2, accepts: ["wing", "pod"] }
+        { id: "left", label: "Left Wing", x: 0, y: 1, accepts: ["wing", "pod"] },
+        { id: "core", label: "Core Sector", x: 1, y: 0, accepts: ["cannon", "reactor", "engine"] },
+        { id: "right", label: "Right Wing", x: 3, y: 1, accepts: ["wing", "pod"] }
       ],
       stats: {
         hull: 30,
@@ -130,16 +130,16 @@ export const shipFamily: ShipFamily = {
       name: "Delta Chassis L2",
       role: "shielded tactical interceptor",
       tone: "blue",
-      sprite: { width: 7, height: 4, lines: ["   ^   ", "  /#\\  ", "<|___|>", "  /_\\  "] },
+      sprite: { width: 4, height: 3, lines: ["⣠⣾⣷⣄", "⡿⠉⠉⢿", "⠱⡄⢠⠎"] },
       idle: [
-        { width: 7, height: 4, lines: ["   ^   ", "  /#\\  ", "<|___|>", "  /_\\  "] },
-        { width: 7, height: 4, lines: ["   +   ", "  /#\\  ", "<|___|>", "  /_\\  "] }
+        { width: 4, height: 3, lines: ["⣠⣾⣷⣄", "⡿⠉⠉⢿", "⠱⡄⢠⠎"] },
+        { width: 4, height: 3, lines: ["⣠⣾⣷⣄", "⡿⠉⠉⢿", "⠱⡄⢠⠎"] }
       ],
       tags: ["medium", "tactical", "delta"],
       attachmentPoints: [
-        { id: "left", label: "Left Shield Pod", x: 0, y: 2, accepts: ["shield", "pod", "wing"] },
-        { id: "core", label: "Core Sector", x: 3, y: 1, accepts: ["cannon", "reactor", "engine"] },
-        { id: "right", label: "Right Shield Pod", x: 6, y: 2, accepts: ["shield", "pod", "wing"] }
+        { id: "left", label: "Left Shield Pod", x: 0, y: 1, accepts: ["shield", "pod"] },
+        { id: "core", label: "Core Sector", x: 1, y: 0, accepts: ["cannon", "reactor", "engine"] },
+        { id: "right", label: "Right Shield Pod", x: 3, y: 1, accepts: ["shield", "pod"] }
       ],
       stats: {
         hull: 50,
@@ -159,17 +159,17 @@ export const shipFamily: ShipFamily = {
       name: "Delta Chassis L3",
       role: "tactical vanguard dreadnought",
       tone: "blue",
-      sprite: { width: 9, height: 4, lines: ["    ^    ", "   /#\\   ", "<</___\\>>", "  /|_|\\  "] },
+      sprite: { width: 5, height: 3, lines: ["⢀⣴⣿⣦⡀", "⣿⠋⠉⠙⣿", "⠣⣄⠀⣠⠜"] },
       idle: [
-        { width: 9, height: 4, lines: ["    ^    ", "   /#\\   ", "<</___\\>>", "  /|_|\\  "] },
-        { width: 9, height: 4, lines: ["    +    ", "   /#\\   ", "<</___\\>>", "  /|_|\\  "] }
+        { width: 5, height: 3, lines: ["⢀⣴⣿⣦⡀", "⣿⠋⠉⠙⣿", "⠣⣄⠀⣠⠜"] },
+        { width: 5, height: 3, lines: ["⢀⣴⣿⣦⡀", "⣿⠋⠉⠙⣿", "⠣⣄⠀⣠⠜"] }
       ],
       tags: ["heavy", "vanguard", "delta"],
       attachmentPoints: [
         { id: "left-outer", label: "Outer Left Wing", x: 0, y: 2, accepts: ["wing", "cannon"] },
-        { id: "core-left", label: "Main Reactor A", x: 3, y: 1, accepts: ["reactor", "engine"] },
-        { id: "core-right", label: "Main Reactor B", x: 5, y: 1, accepts: ["reactor", "engine"] },
-        { id: "right-outer", label: "Outer Right Wing", x: 8, y: 2, accepts: ["wing", "cannon"] }
+        { id: "core-left", label: "Main Reactor A", x: 1, y: 1, accepts: ["reactor", "engine"] },
+        { id: "core-right", label: "Main Reactor B", x: 3, y: 1, accepts: ["reactor", "engine"] },
+        { id: "right-outer", label: "Outer Right Wing", x: 4, y: 2, accepts: ["wing", "cannon"] }
       ],
       stats: {
         hull: 80,
@@ -191,16 +191,16 @@ export const shipFamily: ShipFamily = {
       name: "Ring Chassis L1",
       role: "light energy saucer",
       tone: "purple",
-      sprite: { width: 7, height: 3, lines: [" /---\\ ", "(  o  )", " \\---/ "] },
+      sprite: { width: 4, height: 2, lines: ["⣴⠋⠙⣦", "⠻⣄⣠⠟"] },
       idle: [
-        { width: 7, height: 3, lines: [" /---\\ ", "(  o  )", " \\---/ "] },
-        { width: 7, height: 3, lines: [" /---\\ ", "(  O  )", " \\---/ "] }
+        { width: 4, height: 2, lines: ["⣴⠋⠙⣦", "⠻⣄⣠⠟"] },
+        { width: 4, height: 2, lines: ["⣴⠋⠙⣦", "⠻⣄⣠⠟"] }
       ],
       tags: ["light", "saucer", "ring"],
       attachmentPoints: [
-        { id: "ring-left", label: "Left Node", x: 0, y: 1, accepts: ["pod", "shield"] },
-        { id: "ring-core", label: "Core Node", x: 3, y: 1, accepts: ["reactor", "engine", "cannon"] },
-        { id: "ring-right", label: "Right Node", x: 6, y: 1, accepts: ["pod", "shield"] }
+        { id: "ring-left", label: "Left Node", x: 0, y: 0, accepts: ["pod", "shield"] },
+        { id: "ring-core", label: "Core Node", x: 1, y: 1, accepts: ["reactor", "engine", "cannon"] },
+        { id: "ring-right", label: "Right Node", x: 3, y: 0, accepts: ["pod", "shield"] }
       ],
       stats: {
         hull: 35,
@@ -220,16 +220,16 @@ export const shipFamily: ShipFamily = {
       name: "Ring Chassis L2",
       role: "stabilized energy cruiser",
       tone: "purple",
-      sprite: { width: 7, height: 4, lines: [" /===\\ ", "(o O o)", " \\===/ ", "  /_\\  "] },
+      sprite: { width: 4, height: 3, lines: ["⣴⠋⠙⣦", "⣿⠘⠃⣿", "⠻⣄⣠⠟"] },
       idle: [
-        { width: 7, height: 4, lines: [" /===\\ ", "(o O o)", " \\===/ ", "  /_\\  "] },
-        { width: 7, height: 4, lines: [" /===\\ ", "(o @ o)", " \\===/ ", "  \\_/  "] }
+        { width: 4, height: 3, lines: ["⣴⠋⠙⣦", "⣿⠘⠃⣿", "⠻⣄⣠⠟"] },
+        { width: 4, height: 3, lines: ["⣴⠋⠙⣦", "⣿⠘⠃⣿", "⠻⣄⣠⠟"] }
       ],
       tags: ["medium", "cruiser", "ring"],
       attachmentPoints: [
-        { id: "wing-left", label: "Left Node", x: 0, y: 1, accepts: ["pod", "shield", "cannon"] },
-        { id: "core", label: "Core Node", x: 3, y: 1, accepts: ["reactor", "engine"] },
-        { id: "wing-right", label: "Right Node", x: 6, y: 1, accepts: ["pod", "shield", "cannon"] }
+        { id: "wing-left", label: "Left Node", x: 0, y: 0, accepts: ["pod", "shield", "cannon"] },
+        { id: "core", label: "Core Node", x: 1, y: 1, accepts: ["reactor", "engine"] },
+        { id: "wing-right", label: "Right Node", x: 3, y: 0, accepts: ["pod", "shield", "cannon"] }
       ],
       stats: {
         hull: 55,
@@ -249,17 +249,17 @@ export const shipFamily: ShipFamily = {
       name: "Ring Chassis L3",
       role: "heavy singularity dreadnought",
       tone: "purple",
-      sprite: { width: 9, height: 4, lines: ["  /===\\  ", "<(o O o)>", "  \\===/  ", "   /_\\   "] },
+      sprite: { width: 5, height: 3, lines: ["⣠⠞⠉⠳⣄", "⣿⠰⣿⠆⣿", "⠙⢦⣀⡴⠋"] },
       idle: [
-        { width: 9, height: 4, lines: ["  /===\\  ", "<(o O o)>", "  \\===/  ", "   /_\\   "] },
-        { width: 9, height: 4, lines: ["  /###\\  ", "<(o @ o)>", "  \\###/  ", "   \\_/   "] }
+        { width: 5, height: 3, lines: ["⣠⠞⠉⠳⣄", "⣿⠰⣿⠆⣿", "⠙⢦⣀⡴⠋"] },
+        { width: 5, height: 3, lines: ["⣠⠞⠉⠳⣄", "⣿⠰⣿⠆⣿", "⠙⢦⣀⡴⠋"] }
       ],
       tags: ["heavy", "dreadnought", "ring"],
       attachmentPoints: [
-        { id: "outer-left", label: "Left Singularity Bank", x: 0, y: 1, accepts: ["cannon", "shield"] },
-        { id: "core-left", label: "Main Reactor A", x: 3, y: 1, accepts: ["reactor", "engine"] },
-        { id: "core-right", label: "Main Reactor B", x: 5, y: 1, accepts: ["reactor", "engine"] },
-        { id: "outer-right", label: "Right Singularity Bank", x: 8, y: 1, accepts: ["cannon", "shield"] }
+        { id: "outer-left", label: "Left Singularity Bank", x: 0, y: 0, accepts: ["cannon", "shield"] },
+        { id: "core-left", label: "Main Reactor A", x: 1, y: 1, accepts: ["reactor", "engine"] },
+        { id: "core-right", label: "Main Reactor B", x: 3, y: 1, accepts: ["reactor", "engine"] },
+        { id: "outer-right", label: "Right Singularity Bank", x: 4, y: 0, accepts: ["cannon", "shield"] }
       ],
       stats: {
         hull: 85,
@@ -281,16 +281,16 @@ export const shipFamily: ShipFamily = {
       name: "Wedge Chassis L1",
       role: "broad wing striker",
       tone: "amber",
-      sprite: { width: 7, height: 3, lines: ["   ^   ", "  /#\\  ", "<#####>"] },
+      sprite: { width: 4, height: 2, lines: ["⣴⣿⣿⣦", "⠙⡿⢿⠋"] },
       idle: [
-        { width: 7, height: 3, lines: ["   ^   ", "  /#\\  ", "<#####>"] },
-        { width: 7, height: 3, lines: ["   +   ", "  /#\\  ", "<#####>"] }
+        { width: 4, height: 2, lines: ["⣴⣿⣿⣦", "⠙⡿⢿⠋"] },
+        { width: 4, height: 2, lines: ["⣴⣿⣿⣦", "⠙⡿⢿⠋"] }
       ],
       tags: ["light", "striker", "wedge"],
       attachmentPoints: [
-        { id: "left", label: "Left Wing", x: 0, y: 2, accepts: ["wing", "armor"] },
-        { id: "core", label: "Core Sector", x: 3, y: 1, accepts: ["cannon", "reactor", "engine"] },
-        { id: "right", label: "Right Wing", x: 6, y: 2, accepts: ["wing", "armor"] }
+        { id: "left", label: "Left Wing", x: 0, y: 1, accepts: ["wing", "armor"] },
+        { id: "core", label: "Core Sector", x: 1, y: 0, accepts: ["cannon", "reactor", "engine"] },
+        { id: "right", label: "Right Wing", x: 3, y: 1, accepts: ["wing", "armor"] }
       ],
       stats: {
         hull: 50,
@@ -310,16 +310,16 @@ export const shipFamily: ShipFamily = {
       name: "Wedge Chassis L2",
       role: "heavy armor juggernaut",
       tone: "amber",
-      sprite: { width: 9, height: 4, lines: ["    ^    ", "   /#\\   ", "  /###\\  ", "<#######>"] },
+      sprite: { width: 4, height: 3, lines: ["⣴⣿⣿⣦", "⢿⣿⣿⡿", "⠈⡿⢿⠁"] },
       idle: [
-        { width: 9, height: 4, lines: ["    ^    ", "   /#\\   ", "  /###\\  ", "<#######>"] },
-        { width: 9, height: 4, lines: ["    +    ", "   /#\\   ", "  /###\\  ", "<#######>"] }
+        { width: 4, height: 3, lines: ["⣴⣿⣿⣦", "⢿⣿⣿⡿", "⠈⡿⢿⠁"] },
+        { width: 4, height: 3, lines: ["⣴⣿⣿⣦", "⢿⣿⣿⡿", "⠈⡿⢿⠁"] }
       ],
       tags: ["medium", "juggernaut", "wedge"],
       attachmentPoints: [
-        { id: "left-plating", label: "Left Armor Plating", x: 0, y: 3, accepts: ["armor", "cannon"] },
-        { id: "core", label: "Core Sector", x: 4, y: 1, accepts: ["cannon", "reactor", "engine"] },
-        { id: "right-plating", label: "Right Armor Plating", x: 8, y: 3, accepts: ["armor", "cannon"] }
+        { id: "left-plating", label: "Left Armor Plating", x: 0, y: 1, accepts: ["armor", "cannon"] },
+        { id: "core", label: "Core Sector", x: 1, y: 0, accepts: ["cannon", "reactor", "engine"] },
+        { id: "right-plating", label: "Right Armor Plating", x: 3, y: 1, accepts: ["armor", "cannon"] }
       ],
       stats: {
         hull: 75,
@@ -339,17 +339,17 @@ export const shipFamily: ShipFamily = {
       name: "Wedge Chassis L3",
       role: "colossal flat dreadnought",
       tone: "amber",
-      sprite: { width: 11, height: 4, lines: ["     ^     ", "    /#\\    ", "   /###\\   ", "<#########>"] },
+      sprite: { width: 5, height: 3, lines: ["⣠⣾⣿⣷⣄", "⣿⣿⣿⣿⣿", "⠘⢿⠿⡿⠃"] },
       idle: [
-        { width: 11, height: 4, lines: ["     ^     ", "    /#\\    ", "   /###\\   ", "<#########>"] },
-        { width: 11, height: 4, lines: ["     +     ", "    /#\\    ", "   /###\\   ", "<#########>"] }
+        { width: 5, height: 3, lines: ["⣠⣾⣿⣷⣄", "⣿⣿⣿⣿⣿", "⠘⢿⠿⡿⠃"] },
+        { width: 5, height: 3, lines: ["⣠⣾⣿⣷⣄", "⣿⣿⣿⣿⣿", "⠘⢿⠿⡿⠃"] }
       ],
       tags: ["heavy", "bastion", "wedge"],
       attachmentPoints: [
-        { id: "left-heavy", label: "Left Defense Array", x: 0, y: 3, accepts: ["cannon", "armor"] },
-        { id: "core-left", label: "Heavy Core A", x: 4, y: 2, accepts: ["reactor", "engine"] },
-        { id: "core-right", label: "Heavy Core B", x: 6, y: 2, accepts: ["reactor", "engine"] },
-        { id: "right-heavy", label: "Right Defense Array", x: 10, y: 3, accepts: ["cannon", "armor"] }
+        { id: "left-heavy", label: "Left Defense Array", x: 0, y: 1, accepts: ["cannon", "armor"] },
+        { id: "core-left", label: "Heavy Core A", x: 1, y: 2, accepts: ["reactor", "engine"] },
+        { id: "core-right", label: "Heavy Core B", x: 3, y: 2, accepts: ["reactor", "engine"] },
+        { id: "right-heavy", label: "Right Defense Array", x: 4, y: 1, accepts: ["cannon", "armor"] }
       ],
       stats: {
         hull: 110,

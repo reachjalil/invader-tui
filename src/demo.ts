@@ -214,12 +214,12 @@ const turboEntityVariants: Record<TurboEntityKind, any> = {
     name: "Sidewall Asteroid",
     role: "large slow rotating side hazard",
     tone: "slate",
-    sprite: { width: 7, height: 4, lines: [" .---. ", "/ o o \\", "|  #  |", " \\___/ "] },
+    sprite: { width: 7, height: 4, lines: [" ╓───╖ ", "▞▒▓██▓▚", "▚██▓▒░▞", " ╙───╜ "] },
     idle: [
-      { width: 7, height: 4, lines: [" .---. ", "/ o o \\", "|  #  |", " \\___/ "] },
-      { width: 7, height: 4, lines: [" .-o-. ", "/  #  \\", "| o o |", " \\___/ "] },
-      { width: 7, height: 4, lines: [" .---. ", "/  #  \\", "| o o |", " \\_o_/ "] },
-      { width: 7, height: 4, lines: [" .-#-. ", "/ o o \\", "|     |", " \\___/ "] }
+      { width: 7, height: 4, lines: [" ╓───╖ ", "▞▒▓██▓▚", "▚██▓▒░▞", " ╙───╜ "] },
+      { width: 7, height: 4, lines: [" ╓───╖ ", "▞▓██▓▒▚", "▚█▓▒░░▞", " ╙───╜ "] },
+      { width: 7, height: 4, lines: [" ╓───╖ ", "▞██▓▒░▚", "▚▓▒░░█▞", " ╙───╜ "] },
+      { width: 7, height: 4, lines: [" ╓───╖ ", "▞█▓▒░░▚", "▚▒░░██▞", " ╙───╜ "] }
     ],
     tags: ["turbo", "asteroid"],
     attachmentPoints: [{ id: "core", label: "Core", x: 3, y: 2, accepts: ["armor"] }]
@@ -229,10 +229,10 @@ const turboEntityVariants: Record<TurboEntityKind, any> = {
     name: "Needle Raider",
     role: "pursuit fighter",
     tone: "red",
-    sprite: { width: 5, height: 2, lines: ["<^=> ", "/___\\"] },
+    sprite: { width: 5, height: 2, lines: ["<▲═> ", "▞██▚"] },
     idle: [
-      { width: 5, height: 2, lines: ["<^=> ", "/___\\"] },
-      { width: 5, height: 2, lines: ["<v=> ", "\\___/"] }
+      { width: 5, height: 2, lines: ["<▲═> ", "▞██▚"] },
+      { width: 5, height: 2, lines: ["<▼═> ", "▚██▞"] }
     ],
     tags: ["turbo", "raider"],
     attachmentPoints: [{ id: "nose", label: "Nose", x: 2, y: 0, accepts: ["cannon"] }]
@@ -242,11 +242,11 @@ const turboEntityVariants: Record<TurboEntityKind, any> = {
     name: "Rotor Drone",
     role: "rotating ambusher",
     tone: "purple",
-    sprite: { width: 5, height: 2, lines: ["-o-o-", " /|\\ "] },
+    sprite: { width: 5, height: 2, lines: ["═o═o═", " ╱║╲ "] },
     idle: [
-      { width: 5, height: 2, lines: ["-o-o-", " /|\\ "] },
-      { width: 5, height: 2, lines: ["\\o-o/", " -|- "] },
-      { width: 5, height: 2, lines: ["|o-o|", " \\|/ "] }
+      { width: 5, height: 2, lines: ["═o═o═", " ╱║╲ "] },
+      { width: 5, height: 2, lines: ["╓o─o╖", " ═╬═ "] },
+      { width: 5, height: 2, lines: ["╢o─o╟", " ╲║╱ "] }
     ],
     tags: ["turbo", "rotor"],
     attachmentPoints: [{ id: "hub", label: "Hub", x: 2, y: 0, accepts: ["engine"] }]
@@ -256,10 +256,10 @@ const turboEntityVariants: Record<TurboEntityKind, any> = {
     name: "Static Mine",
     role: "space lane obstacle",
     tone: "amber",
-    sprite: { width: 3, height: 3, lines: [" + ", "+O+", " + "] },
+    sprite: { width: 3, height: 3, lines: [" ┿ ", "┿█┿", " ┿ "] },
     idle: [
-      { width: 3, height: 3, lines: [" + ", "+O+", " + "] },
-      { width: 3, height: 3, lines: [" x ", "xOx", " x "] }
+      { width: 3, height: 3, lines: [" ┿ ", "┿█┿", " ┿ "] },
+      { width: 3, height: 3, lines: [" ╳ ", "╳▓╳", " ╳ "] }
     ],
     tags: ["turbo", "mine"],
     attachmentPoints: [{ id: "charge", label: "Charge", x: 1, y: 1, accepts: ["reactor"] }]
@@ -269,10 +269,10 @@ const turboEntityVariants: Record<TurboEntityKind, any> = {
     name: "Razor Comet",
     role: "high speed crossing hazard",
     tone: "lime",
-    sprite: { width: 6, height: 2, lines: ["===>o ", "  ..  "] },
+    sprite: { width: 6, height: 2, lines: ["═══▶o ", "  ░░  "] },
     idle: [
-      { width: 6, height: 2, lines: ["===>o ", "  ..  "] },
-      { width: 6, height: 2, lines: ["--->O ", " ...  "] }
+      { width: 6, height: 2, lines: ["═══▶o ", "  ░░  "] },
+      { width: 6, height: 2, lines: ["───▷O ", " ░░░  "] }
     ],
     tags: ["turbo", "comet"],
     attachmentPoints: [{ id: "tail", label: "Tail", x: 0, y: 0, accepts: ["engine"] }]
@@ -282,10 +282,10 @@ const turboEntityVariants: Record<TurboEntityKind, any> = {
     name: "Dread Gate V2",
     role: "version two boss",
     tone: "red",
-    sprite: { width: 11, height: 4, lines: ["  /=====\\  ", "<| O O O |>", "  \\=|_|=/  ", "   /___\\   "] },
+    sprite: { width: 11, height: 4, lines: ["  ╭═════╮  ", "<║ █ █ █ ║>", "  ╰═╦═╦═╯  ", "   ▞███▚   "] },
     idle: [
-      { width: 11, height: 4, lines: ["  /=====\\  ", "<| O O O |>", "  \\=|_|=/  ", "   /___\\   "] },
-      { width: 11, height: 4, lines: ["  /#####\\  ", "<| @ @ @ |>", "  \\=|_|=/  ", "   \\___/   "] }
+      { width: 11, height: 4, lines: ["  ╭═════╮  ", "<║ █ █ █ ║>", "  ╰═╦═╦═╯  ", "   ▞███▚   "] },
+      { width: 11, height: 4, lines: ["  ╭═════╮  ", "<║ ▓ ▓ ▓ ║>", "  ╰═╩═╩═╯  ", "   ▚███▞   "] }
     ],
     tags: ["turbo", "boss"],
     attachmentPoints: [{ id: "core", label: "Core", x: 5, y: 1, accepts: ["cannon"] }]
@@ -324,13 +324,14 @@ const terminal = {
   disableMouse: "\x1b[?1000l\x1b[?1002l\x1b[?1003l\x1b[?1004l\x1b[?1006l",
   enterLiveScreen: "\x1b[?1049h\x1b[?25l\x1b[?1000l\x1b[?1002l\x1b[?1003l\x1b[?1004l\x1b[?1006l\x1b[2J\x1b[H",
   exitLiveScreen: "\x1b[?1000l\x1b[?1002l\x1b[?1003l\x1b[?1004l\x1b[?1006l\x1b[?25h\x1b[?1049l",
-  frameStart: "\x1b[?1049h\x1b[?25l\x1b[?1000l\x1b[?1002l\x1b[?1003l\x1b[?1004l\x1b[?1006l\x1b[H\x1b[2J",
+  frameStart: "\x1b[?1049h\x1b[?25l\x1b[?1000l\x1b[?1002l\x1b[?1003l\x1b[?1004l\x1b[?1006l\x1b[H",
   frameEnd: "\x1b[J"
 } as const;
 
 // Global Game State
 let screen: "splash" | "mode" | "start" | "playing" | "gameover" | "victory" = "splash";
 let selectedGameMode: GameMode = "classic";
+let menuAnimationTick = 0;
 let selectedShipIndex = 0;
 let selectedPlayerCount: 1 | 2 = 1;
 let selectedComShipIndex = 1;
@@ -409,6 +410,7 @@ let campaignLoop = 1;
 let enemyDirection = 1;
 let enemyMoveTimer = 0;
 let enemyBaseMoveCooldown = 20; // in ticks
+let enemyStepCount = 0;
 
 let shakeIntensity = 0;
 let flashTicks = 0;
@@ -993,6 +995,7 @@ function startWave(waveNum: number) {
   particles = [];
   collectibles = [];
   enemyDirection = 1;
+  enemyStepCount = 0;
   if (isTurboMode()) {
     startTurboWave(waveNum);
     return;
@@ -1199,6 +1202,7 @@ function startGame(ship: PlayerShip, options: StartGameOptions = {}) {
   turboGateStartDistance = 0;
   turboRouteX = 0;
   turboBossDestroyed = false;
+  enemyStepCount = 0;
   gameOverReason = "SHIP DESTROYED";
   setStatus(
     isTurboMode()
@@ -1219,6 +1223,11 @@ function startGame(ship: PlayerShip, options: StartGameOptions = {}) {
 function getAnimatedFrame(variant: any, currentTick: number): SpriteFrame {
   const animated = variant as any;
   const frames = animated.idle && animated.idle.length > 0 ? animated.idle : [variant.sprite];
+  if (variant.id && variant.id.startsWith("enemy-")) {
+    if (!isTurboMode()) {
+      return frames[enemyStepCount % frames.length] || variant.sprite;
+    }
+  }
   return frames[Math.floor(currentTick / 6) % frames.length] || variant.sprite;
 }
 
@@ -2228,6 +2237,7 @@ function updateGame() {
 
   if (enemyMoveTimer >= enemyMoveCooldown) {
     enemyMoveTimer = 0;
+    enemyStepCount++;
     
     let hitEdge = false;
     for (const enemy of enemies) {
@@ -3124,6 +3134,7 @@ function renderSplashScreen(): string {
 function setSelectedGameMode(mode: GameMode) {
   if (selectedGameMode === mode) return;
   selectedGameMode = mode;
+  menuAnimationTick = 0;
   applyGameModeDimensions(mode);
   initStars();
 
@@ -3159,11 +3170,16 @@ function renderArcadeRail(label: string, width: number, tone: Rgb, pattern = "�
   return fitAnsi(`${rgb(repeatPattern(pattern, left), tone, colorEnabled)}${bold(rgb(text, tone, colorEnabled), colorEnabled)}${rgb(repeatPattern(pattern, right), tone, colorEnabled)}`, width);
 }
 
-function renderTurboRumbleText(text: string, tone: Rgb, strong = false): string {
+function renderTurboRumbleText(text: string, tone: Rgb, strong = false, customTick = tick): string {
+  const isSettled = menuAnimationTick >= 50;
+  if (isSettled) {
+    return bold(rgb(text, tone, colorEnabled), colorEnabled);
+  }
+
   const chars = Array.from(text.toUpperCase());
   const rumble = chars.map((char, index) => {
     if (char === " ") return " ";
-    const phase = (tick + index * 2) % 8;
+    const phase = (customTick + index * 2) % 8;
     const expanded = strong && phase === 0 ? `${char}${char}` : char;
     if (phase === 0) return bold(rgb(expanded, theme.white, colorEnabled), colorEnabled);
     if (phase === 3) return bold(rgb(expanded, theme.red, colorEnabled), colorEnabled);
@@ -3172,46 +3188,217 @@ function renderTurboRumbleText(text: string, tone: Rgb, strong = false): string 
   return rumble.join(strong ? " " : "");
 }
 
-function renderModeBackdropLine(width: number, row: number): string {
+function getBackdropEntityChar(x: number, row: number, width: number, menuTick: number): { char: string; tone: Tone } | null {
+  return null;
+}
+
+function renderBackdropPadding(length: number, row: number, startX: number, width: number, menuTick: number): string {
+  if (length <= 0) return "";
+  if (selectedGameMode !== "turbo") {
+    return " ".repeat(length);
+  }
+
+  const isSettled = menuAnimationTick >= 50;
+  let result = "";
+  for (let i = 0; i < length; i++) {
+    const x = startX + i;
+    
+    if (!isSettled) {
+      const matrixPhase = (menuTick + row * 2 - x) % 12;
+      const starPhase = (menuTick - row + x * 3) % 20;
+      
+      if (matrixPhase === 0) {
+        const glyphs = ["★", "◆", "▲", "✦", "▞", "▚", "·", "o"];
+        const char = glyphs[(menuTick + x + row) % glyphs.length]!;
+        result += bold(rgb(char, theme.amber, colorEnabled), colorEnabled);
+      } else if (matrixPhase === 1 || matrixPhase === 2) {
+        result += dim(rgb("·", theme.amber, colorEnabled), colorEnabled);
+      } else if (starPhase === 0) {
+        result += bold(rgb("✦", theme.white, colorEnabled), colorEnabled);
+      } else if (starPhase === 10) {
+        result += dim(rgb("·", theme.muted, colorEnabled), colorEnabled);
+      } else if ((x + row) % 6 === 0 && menuTick % 12 < 4) {
+        result += dim(rgb("░", theme.purple, colorEnabled), colorEnabled);
+      } else {
+        result += " ";
+      }
+    } else {
+      // Settled background: very subtle, clean, slow drifting/twinkling stars. No matrix falling rain!
+      const slowTick = Math.floor(tick / 4);
+      const starPhase = (slowTick - row + x * 7) % 40;
+      
+      if (starPhase === 0) {
+        result += dim(rgb("·", theme.muted, colorEnabled), colorEnabled);
+      } else if (starPhase === 20) {
+        result += rgb("·", theme.border, colorEnabled);
+      } else if (starPhase === 10) {
+        result += rgb("✦", theme.border, colorEnabled);
+      } else {
+        result += " ";
+      }
+    }
+  }
+  return result;
+}
+
+function centerWithBackdrop(content: string, width: number, row: number, menuTick: number): string {
+  const visibleLen = visibleLength(content);
+  if (visibleLen >= width) return content;
+  const left = Math.floor((width - visibleLen) / 2);
+  const right = width - visibleLen - left;
+  const leftStr = renderBackdropPadding(left, row, 0, width, menuTick);
+  const rightStr = renderBackdropPadding(right, row, left + visibleLen, width, menuTick);
+  return leftStr + content + rightStr;
+}
+
+function renderModeBackdropLine(width: number, row: number, menuTick: number): string {
   if (!isTurboMode()) {
     return rgb(repeatPattern(row % 2 === 0 ? "· " : "  ", width), theme.grid, colorEnabled);
   }
 
-  const phase = (tick + row * 3) % 18;
-  const glyphs = ["·", " ", "░", " ", "✦", " "];
-  let line = "";
-  for (let col = 0; visibleLength(line) < width; col++) {
-    const glyph = (col + phase) % 17 === 0 ? "◆" : glyphs[(col + phase) % glyphs.length]!;
-    line += glyph;
+  const isSettled = menuAnimationTick >= 50;
+  let result = "";
+  
+  if (!isSettled) {
+    const phase = (menuTick + row * 2) % 12;
+    const starPhase = (menuTick - row) % 20;
+
+    for (let col = 0; col < width; col++) {
+      const colPhase = (col + phase) % 12;
+      if (colPhase === 0) {
+        const glyphs = ["★", "◆", "▲", "✦", "▞", "▚", "·", "o"];
+        const glyph = glyphs[(menuTick + col + row) % glyphs.length]!;
+        result += bold(rgb(glyph, theme.amber, colorEnabled), colorEnabled);
+      } else if (colPhase === 1 || colPhase === 2) {
+        result += dim(rgb("·", theme.amber, colorEnabled), colorEnabled);
+      } else if ((col + starPhase) % 20 === 0) {
+        result += bold(rgb("✦", theme.white, colorEnabled), colorEnabled);
+      } else if ((col + starPhase) % 20 === 10) {
+        result += dim(rgb("·", theme.muted, colorEnabled), colorEnabled);
+      } else if ((col + row) % 6 === 0 && menuTick % 12 < 4) {
+        result += dim(rgb("░", theme.purple, colorEnabled), colorEnabled);
+      } else {
+        result += " ";
+      }
+    }
+  } else {
+    // Settled: subtle stars on the grid line
+    const slowTick = Math.floor(tick / 4);
+    const starPhase = (slowTick - row) % 40;
+    
+    for (let col = 0; col < width; col++) {
+      const colStarPhase = (col + starPhase) % 40;
+      if (colStarPhase === 0) {
+        result += dim(rgb("·", theme.muted, colorEnabled), colorEnabled);
+      } else if (colStarPhase === 10) {
+        result += rgb("✦", theme.border, colorEnabled);
+      } else {
+        result += " ";
+      }
+    }
   }
-  const tone = row % 3 === 0 ? theme.amber : row % 3 === 1 ? theme.cyan : theme.purple;
-  return dim(rgb(fitAnsi(line, width), tone, colorEnabled), colorEnabled);
+  return result;
 }
 
-function renderModeOption(mode: GameMode, width: number): string[] {
+function getShinedChar(char: string, idx: number, perimeter: number, menuTick: number): string {
+  if (!colorEnabled) return char;
+  
+  const isSettled = menuAnimationTick >= 50;
+  const speed = isSettled ? 0.35 : 1.5;
+  const shineCenter = Math.floor(menuTick * speed) % perimeter;
+  const diff = (idx - shineCenter + perimeter) % perimeter;
+  
+  if (diff === 0) {
+    return bold(rgb(char, [255, 245, 180], colorEnabled), colorEnabled); // Bright Gold/White core
+  } else if (diff === 1 || diff === perimeter - 1) {
+    return bold(rgb(char, [255, 215, 0], colorEnabled), colorEnabled); // Gold inner tail
+  } else if (diff === 2 || diff === perimeter - 2) {
+    return rgb(char, [218, 165, 32], colorEnabled); // Goldenrod outer tail
+  } else if (diff === 3 || diff === perimeter - 3) {
+    return isSettled ? dim(rgb(char, theme.border, colorEnabled), colorEnabled) : rgb(char, theme.amber, colorEnabled);
+  } else if (diff === 4 || diff === perimeter - 4) {
+    return isSettled ? dim(rgb(char, theme.border, colorEnabled), colorEnabled) : dim(rgb(char, theme.amber, colorEnabled));
+  } else {
+    return dim(rgb(char, theme.border, colorEnabled), colorEnabled); // Default Border
+  }
+}
+
+function renderModeOption(mode: GameMode, width: number, startRowIdx: number, menuTick: number): string[] {
   const selected = selectedGameMode === mode;
   const config = getGameModeConfig(mode);
   const cardWidth = Math.min(width, mode === "turbo" ? 54 : 48);
   const tone = selected ? config.accent : theme.border;
-  const top = selected ? `╔${"═".repeat(cardWidth - 2)}╗` : `┌${"─".repeat(cardWidth - 2)}┐`;
-  const bottom = selected ? `╚${"═".repeat(cardWidth - 2)}╝` : `└${"─".repeat(cardWidth - 2)}┘`;
+  
+  let top = selected ? `╔${"═".repeat(cardWidth - 2)}╗` : `┌${"─".repeat(cardWidth - 2)}┐`;
+  let bottom = selected ? `╚${"═".repeat(cardWidth - 2)}╝` : `└${"─".repeat(cardWidth - 2)}┘`;
+
+  if (mode === "turbo" && selected) {
+    const perimeter = 2 * cardWidth + 6;
+    
+    // Top line
+    let topChars = "";
+    for (let col = 0; col < cardWidth; col++) {
+      const char = col === 0 ? "╔" : col === cardWidth - 1 ? "╗" : "═";
+      topChars += getShinedChar(char, col, perimeter, menuTick);
+    }
+    
+    // Bottom line
+    let bottomChars = "";
+    for (let col = 0; col < cardWidth; col++) {
+      const char = col === 0 ? "╚" : col === cardWidth - 1 ? "╝" : "═";
+      const idx = cardWidth + 3 + (cardWidth - 1 - col);
+      bottomChars += getShinedChar(char, idx, perimeter, menuTick);
+    }
+    
+    // Left and right border chars for middle lines
+    const getLeftBorder = (row: number) => {
+      const idx = 2 * cardWidth + 3 + (3 - row);
+      return getShinedChar("║", idx, perimeter, menuTick);
+    };
+    
+    const getRightBorder = (row: number) => {
+      const idx = cardWidth + row - 1;
+      return getShinedChar("║", idx, perimeter, menuTick);
+    };
+    
+    const marker = "▶";
+    const title = renderTurboRumbleText("TURBO MODE V2", theme.amber, true, menuTick);
+    const dimensions = `${config.boardWidth}x${config.boardHeight}`;
+    const feature = "V2 RUN  //  GATE BOSS  //  E ENGINE";
+    const cabinet = "TURBO CABINET";
+    
+    const rawLines = [
+      topChars,
+      getLeftBorder(1) + rgb(` ${marker} `, tone, colorEnabled) + fitAnsi(title, cardWidth - 8) + rgb(` ${marker} `, tone, colorEnabled) + getRightBorder(1),
+      getLeftBorder(2) + rgb(` `, tone, colorEnabled) + fitAnsi(`${cabinet}  ${dimensions}`, cardWidth - 4) + rgb(` `, tone, colorEnabled) + getRightBorder(2),
+      getLeftBorder(3) + rgb(` `, tone, colorEnabled) + fitAnsi(feature, cardWidth - 4) + rgb(` `, tone, colorEnabled) + getRightBorder(3),
+      bottomChars
+    ];
+    
+    return rawLines.map((line, offset) => {
+      return centerWithBackdrop(line, width, startRowIdx + offset, menuTick);
+    });
+  }
+
   const marker = selected ? "▶" : " ";
-  const title = mode === "turbo" && selected
-    ? renderTurboRumbleText("TURBO", theme.amber, shakeIntensity > 0)
-    : bold(rgb(config.label.toUpperCase(), selected ? config.accent : theme.muted, colorEnabled), colorEnabled);
+  const title = bold(rgb(config.label.toUpperCase(), selected ? config.accent : theme.muted, colorEnabled), colorEnabled);
   const dimensions = `${config.boardWidth}x${config.boardHeight}`;
   const feature = mode === "turbo"
     ? "V2 RUN  //  GATE BOSS  //  E ENGINE"
     : "ORIGINAL LANE  //  SPACE LASER";
   const cabinet = mode === "turbo" ? "TURBO CABINET" : "CLASSIC VECTOR";
 
-  return [
-    centerText(rgb(top, tone, colorEnabled), width),
-    centerText(rgb(`║ ${marker} `, tone, colorEnabled) + fitAnsi(title, cardWidth - 8) + rgb(` ${marker} ║`, tone, colorEnabled), width),
-    centerText(rgb(`║ `, tone, colorEnabled) + fitAnsi(`${cabinet}  ${dimensions}`, cardWidth - 4) + rgb(` ║`, tone, colorEnabled), width),
-    centerText(rgb(`║ `, tone, colorEnabled) + fitAnsi(feature, cardWidth - 4) + rgb(` ║`, tone, colorEnabled), width),
-    centerText(rgb(bottom, tone, colorEnabled), width)
+  const rawLines = [
+    rgb(top, tone, colorEnabled),
+    rgb(`║ ${marker} `, tone, colorEnabled) + fitAnsi(title, cardWidth - 8) + rgb(` ${marker} ║`, tone, colorEnabled),
+    rgb(`║ `, tone, colorEnabled) + fitAnsi(`${cabinet}  ${dimensions}`, cardWidth - 4) + rgb(` ║`, tone, colorEnabled),
+    rgb(`║ `, tone, colorEnabled) + fitAnsi(feature, cardWidth - 4) + rgb(` ║`, tone, colorEnabled),
+    rgb(bottom, tone, colorEnabled)
   ];
+
+  return rawLines.map((line, offset) => {
+    return centerWithBackdrop(line, width, startRowIdx + offset, menuTick);
+  });
 }
 
 function renderModeSelectScreen(): string {
@@ -3219,21 +3406,25 @@ function renderModeSelectScreen(): string {
   const modeWidth = Math.max(MIN_PLAYFIELD_WIDTH, PLAYFIELD_WIDTH);
   const innerWidth = Math.max(1, modeWidth - 6);
   const title = selectedGameMode === "turbo"
-    ? renderTurboRumbleText("TURBO MODE", theme.amber, shakeIntensity > 0)
+    ? renderTurboRumbleText("TURBO MODE", theme.amber, shakeIntensity > 0, menuAnimationTick)
     : bold(rgb("SELECT PLAY MODE", config.accent, colorEnabled), colorEnabled);
-  const rows = [
-    renderArcadeRail(selectedGameMode === "turbo" ? "1UP  TURBO READY  HIGH VOLTAGE" : "1UP  CLASSIC READY", innerWidth, config.accent, selectedGameMode === "turbo" ? "▓" : "═"),
-    centerText(title, innerWidth),
-    renderArcadeRail("A/D OR ARROWS TO CHOOSE", innerWidth, theme.border, selectedGameMode === "turbo" ? "░" : "─"),
-    ...renderModeOption("classic", innerWidth),
-    renderModeBackdropLine(innerWidth, 1),
-    ...renderModeOption("turbo", innerWidth),
-    selectedGameMode === "turbo"
-      ? renderArcadeRail("BACKGROUND RUMBLE  //  LOW MOTION SHAKE  //  NOVA SPECIAL", innerWidth, theme.amber, "░")
-      : centerText(rgb("CLASSIC: ORIGINAL PLAY SPACE AND HORIZONTAL DODGE", theme.cyan, colorEnabled), innerWidth),
-    centerText(bold(rgb("ENTER: CONTINUE     Q: QUIT", theme.white, colorEnabled), colorEnabled), innerWidth)
-  ];
 
+  const rows: string[] = [];
+  rows.push(renderArcadeRail(selectedGameMode === "turbo" ? "1UP  TURBO READY  HIGH VOLTAGE" : "1UP  CLASSIC READY", innerWidth, config.accent, selectedGameMode === "turbo" ? "▓" : "═"));
+  rows.push(centerWithBackdrop(title, innerWidth, 1, tick));
+  rows.push(renderArcadeRail("A/D OR ARROWS TO CHOOSE", innerWidth, theme.border, selectedGameMode === "turbo" ? "░" : "─"));
+  rows.push(...renderModeOption("classic", innerWidth, 3, tick));
+  rows.push(renderModeBackdropLine(innerWidth, 8, tick));
+  rows.push(...renderModeOption("turbo", innerWidth, 9, tick));
+  
+  if (selectedGameMode === "turbo") {
+    rows.push(renderArcadeRail("BACKGROUND RUMBLE  //  LOW MOTION SHAKE  //  NOVA SPECIAL", innerWidth, theme.amber, "░"));
+  } else {
+    rows.push(centerWithBackdrop(rgb("CLASSIC: ORIGINAL PLAY SPACE AND HORIZONTAL DODGE", theme.cyan, colorEnabled), innerWidth, 14, tick));
+  }
+  
+  rows.push(centerWithBackdrop(bold(rgb("ENTER: CONTINUE     Q: QUIT", theme.white, colorEnabled), colorEnabled), innerWidth, 15, tick));
+  
   return box(" MODE SELECT ", rows, {
     width: modeWidth,
     height: 19,
@@ -3442,14 +3633,20 @@ function renderShipSelectCard(ship: PlayerShip, index: number, width: number): s
     (selectedLoadoutSlot === "p1" && isP1Selected) ||
     (selectedLoadoutSlot === "com" && isComSelected);
   const accent = isActiveSelection ? theme.cyan : isComSelected ? theme.amber : isP1Selected ? theme.green : theme.border;
+  
   const titleParts = [
-    isActiveSelection ? ">" : "",
     isP1Selected ? "P1" : "",
-    isComSelected ? "COM" : ""
+    isComSelected ? "COM" : "",
+    isActiveSelection ? "EDITABLE" : ""
   ].filter(Boolean);
+
   const bodyWidth = Math.max(1, width - 2);
   const spriteRows = renderSprite(ship.variant, colorEnabled, tick % 2).map((line) => centerFit(line, bodyWidth));
   const stats = ship.variant.stats;
+  
+  const flashColor = tick % 10 < 5 ? theme.cyan : theme.white;
+  const footerText = isActiveSelection ? "⚡ SPACE TO EDIT ⚡" : "A/D TO SELECT";
+
   const rows = [
     ...spriteRows,
     "",
@@ -3459,7 +3656,7 @@ function renderShipSelectCard(ship: PlayerShip, index: number, width: number): s
     fitAnsi(`${rgb("HULL", theme.green, colorEnabled)} ${String(stats.hull).padStart(3)}  ${rgb("SHLD", theme.blue, colorEnabled)} ${String(stats.shield).padStart(3)}`, bodyWidth),
     fitAnsi(`${rgb("SPD", theme.amber, colorEnabled)}  ${String(stats.speed).padStart(3)}  ${rgb("DMG", theme.red, colorEnabled)}  ${String(stats.projectileDamage).padStart(3)}`, bodyWidth),
     "",
-    centerFit(rgb(isActiveSelection ? "SPACE CUSTOMIZE" : "A/D SELECT", isActiveSelection ? theme.cyan : theme.muted, colorEnabled), bodyWidth)
+    centerFit(bold(rgb(footerText, isActiveSelection ? flashColor : theme.muted, colorEnabled), colorEnabled), bodyWidth)
   ];
 
   return box(titleParts.length > 0 ? ` ${titleParts.join(" ")} ` : "", rows, {
@@ -3478,14 +3675,32 @@ function renderShipSelectScreen(): string {
   const cardWidth = Math.max(18, Math.floor((innerWidth - 3) / playerShips.length));
   const cards = playerShips.map((ship, index) => renderShipSelectCard(ship, index, cardWidth));
   const cardBlock = hstack(cards, 1);
+  
   const rows = [
-    centerFit(bold(rgb("SELECT SHIP", theme.amber, colorEnabled), colorEnabled), innerWidth),
-    centerFit(rgb("Press Space or Tab to customize the highlighted ship. Enter launches it as-is.", theme.muted, colorEnabled), innerWidth),
+    centerFit(bold(rgb("SELECT YOUR STARFIGHTER", theme.amber, colorEnabled), colorEnabled), innerWidth),
+    centerFit(
+      rgb("★ Press ", theme.text, colorEnabled) +
+      bold(rgb("SPACEBAR", theme.cyan, colorEnabled), colorEnabled) +
+      rgb(" or ", theme.text, colorEnabled) +
+      bold(rgb("TAB", theme.cyan, colorEnabled), colorEnabled) +
+      rgb(" to customize components, modules & cosmetics! ★", theme.text, colorEnabled),
+      innerWidth
+    ),
     "",
     ...cardBlock.split("\n").map((line) => centerFit(line, innerWidth)),
     "",
-    centerFit(bold(rgb("SPACE/TAB Customize  A/D Ship  Enter Launch  C Pilot Mode  E P1/COM", theme.cyan, colorEnabled), colorEnabled), innerWidth),
-    centerFit(rgb("R resets the highlighted ship to stock.", theme.muted, colorEnabled), innerWidth)
+    centerFit(
+      bold(
+        rgb("SPACE/TAB", theme.cyan, colorEnabled) + rgb(" Customize  ", theme.text, colorEnabled) +
+        rgb("A/D", theme.cyan, colorEnabled) + rgb(" Select  ", theme.text, colorEnabled) +
+        rgb("ENTER", theme.green, colorEnabled) + rgb(" Launch  ", theme.text, colorEnabled) +
+        rgb("C", theme.amber, colorEnabled) + rgb(" Mode  ", theme.text, colorEnabled) +
+        rgb("E", theme.amber, colorEnabled) + rgb(" Swap P1/COM", theme.text, colorEnabled),
+        colorEnabled
+      ),
+      innerWidth
+    ),
+    centerFit(rgb("Press R to reset the highlighted ship back to stock.", theme.muted, colorEnabled), innerWidth)
   ];
 
   return box(" SHIP SELECT ", rows, {
@@ -3645,6 +3860,7 @@ const handleInput = (key: Buffer | string) => {
   if (screen === "splash") {
     if (keyStr === "\r" || keyStr === "\n" || keyStr === " ") {
       screen = "mode";
+      menuAnimationTick = 0;
       applyGameModeDimensions();
       render();
     }
@@ -3709,32 +3925,58 @@ const handleInput = (key: Buffer | string) => {
       render();
     }
   } else if (screen === "playing") {
-    if (isTurboMode() && isShiftLeftInput(keyStr)) {
-      rotateTurboPlayer(-0.45);
-      render();
-    } else if (isTurboMode() && isShiftRightInput(keyStr)) {
-      rotateTurboPlayer(0.45);
-      render();
-    } else if (keyStr === "a" || keyStr === "\u001b[D") {
-      movePlayer(-2);
-      render();
-    } else if (keyStr === "d" || keyStr === "\u001b[C") {
-      movePlayer(2);
-      render();
-    } else if (isTurboMode() && (keyStr === "w" || keyStr === "\u001b[A")) {
-      movePlayer(0, -2);
-      render();
-    } else if (isTurboMode() && (keyStr === "s" || keyStr === "\u001b[B")) {
-      movePlayer(0, 2);
-      render();
-    } else if (keyStr === " ") {
+    let handled = false;
+
+    // 1. Shift + arrow or Shift + A/D for rotation (Turbo Mode only)
+    if (isTurboMode()) {
+      if (keyStr.includes("A") || keyStr.includes("\u001b[1;2D")) {
+        rotateTurboPlayer(-0.45);
+        handled = true;
+      }
+      if (keyStr.includes("D") || keyStr.includes("\u001b[1;2C")) {
+        rotateTurboPlayer(0.45);
+        handled = true;
+      }
+    }
+
+    // 2. Parse combined directional movements
+    let moveX = 0;
+    let moveY = 0;
+
+    if (keyStr.includes("a") || keyStr.includes("\u001b[D")) {
+      moveX = -2;
+    } else if (keyStr.includes("d") || keyStr.includes("\u001b[C")) {
+      moveX = 2;
+    }
+
+    if (isTurboMode()) {
+      if (keyStr.includes("w") || keyStr.includes("\u001b[A")) {
+        moveY = -2;
+      } else if (keyStr.includes("s") || keyStr.includes("\u001b[B")) {
+        moveY = 2;
+      }
+    }
+
+    if (moveX !== 0 || moveY !== 0) {
+      movePlayer(moveX, moveY);
+      handled = true;
+    }
+
+    // 3. Actions: Shoot, Special, Engine Boost
+    if (keyStr.includes(" ")) {
       playerShoot();
-      render();
-    } else if (keyStr === "x" || keyStr === "X") {
+      handled = true;
+    }
+    if (keyStr.includes("x") || keyStr.includes("X")) {
       fireTurboSpecial();
-      render();
-    } else if (isTurboMode() && (keyStr === "e" || keyStr === "E")) {
+      handled = true;
+    }
+    if (isTurboMode() && (keyStr.includes("e") || keyStr.includes("E"))) {
       triggerTurboEngine();
+      handled = true;
+    }
+
+    if (handled) {
       render();
     }
   } else if (screen === "gameover" || screen === "victory") {
@@ -3751,10 +3993,15 @@ const handleResize = () => {
 };
 
 function isIgnoredTerminalInput(input: string): boolean {
-  if (input === "\u001b[D" || input === "\u001b[C" || input === "\u001b[A" || input === "\u001b[B") {
+  if (
+    input.includes("\u001b[D") ||
+    input.includes("\u001b[C") ||
+    input.includes("\u001b[A") ||
+    input.includes("\u001b[B")
+  ) {
     return false;
   }
-  if (/^\u001b\[1;2[ABCD]$/.test(input)) return false;
+  if (/\u001b\[1;2[ABCD]/.test(input)) return false;
 
   if (input === "\u001b[I" || input === "\u001b[O") return true;
   if (/^\u001b\[(?:<\d+;\d+;\d+[mM]|M)/.test(input)) return true;
@@ -3787,6 +4034,7 @@ function main() {
       render();
     } else if (screen === "mode" || screen === "start") {
       tick++;
+      if (menuAnimationTick < 50) menuAnimationTick++;
       if (flashTicks > 0) flashTicks--;
       if (statusMessageTicks > 0) statusMessageTicks--;
       if (tick % 3 === 0) render();

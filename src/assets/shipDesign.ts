@@ -1019,6 +1019,9 @@ function getCosmeticCoordinates(frame: ShipVariant["sprite"], slotId: ShipCosmet
   if (slotId === "leftWing") return { x: 0, y: wingY };
   if (slotId === "rightWing") return { x: frame.width - 1, y: wingY };
   if (slotId === "tail") return { x: centerX, y: frame.height - 1 };
+  if (slotId === "interior" && frame.height <= 2) {
+    return { x: Math.max(0, centerX - 1), y: centerY };
+  }
   return { x: centerX, y: centerY };
 }
 
