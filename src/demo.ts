@@ -82,6 +82,11 @@ type PlayerShip = {
   desc: string;
 };
 
+type StartGameOptions = {
+  preserveScore?: boolean;
+  advanceDifficulty?: boolean;
+};
+
 // Tone colors mapping
 const toneColors: Record<Tone, Rgb> = {
   green: theme.green,
@@ -160,9 +165,10 @@ const playerShips: PlayerShip[] = [
 
 // Terminal controls escape sequences
 const terminal = {
-  enterLiveScreen: "\x1b[?1000l\x1b[?1002l\x1b[?1003l\x1b[?1004l\x1b[?1006l\x1b[?1049h\x1b[?25l\x1b[2J\x1b[H",
+  disableMouse: "\x1b[?1000l\x1b[?1002l\x1b[?1003l\x1b[?1004l\x1b[?1006l",
+  enterLiveScreen: "\x1b[?1049h\x1b[?25l\x1b[?1000l\x1b[?1002l\x1b[?1003l\x1b[?1004l\x1b[?1006l\x1b[2J\x1b[H",
   exitLiveScreen: "\x1b[?1000l\x1b[?1002l\x1b[?1003l\x1b[?1004l\x1b[?1006l\x1b[?25h\x1b[?1049l",
-  frameStart: "\x1b[H\x1b[J",
+  frameStart: "\x1b[?1049h\x1b[?25l\x1b[?1000l\x1b[?1002l\x1b[?1003l\x1b[?1004l\x1b[?1006l\x1b[H\x1b[2J",
   frameEnd: "\x1b[J"
 } as const;
 
@@ -197,6 +203,7 @@ let shieldPowerTicks = 0;
 let statusMessage = "READY";
 let statusMessageTicks = 0;
 let gameOverReason = "SHIP DESTROYED";
+let campaignLoop = 1;
 
 let enemyDirection = 1;
 let enemyMoveTimer = 0;
@@ -269,6 +276,40 @@ function getWaveStartEnemiesCount(waveNum = wave): number {
   if (waveNum === 1) return 18;
   if (waveNum === 2) return 15;
   return 5;
+}
+
+function getDifficultyMultiplier(): number {
+  return 1 + (campaignLoop - 1) * 0.25;
+}
+
+function getEnemyTempoMultiplier(): number {
+  return Math.max(0.55, 1 - (campaignLoop - 1) * 0.08);
+}
+
+function scaleEnemyHp(value: number): number {
+  return Math.max(1, Math.round(value * getDifficultyMultiplier()));
+}
+
+function scaleEnemyDamage(value: number): number {
+  return Math.max(1, Math.round(value * (1 + (campaignLoop - 1) * 0.18)));
+}
+
+function scaleEnemyCooldown(value: number): number {
+  return Math.max(8, Math.floor(value * getEnemyTempoMultiplier()));
+}
+
+function applyCampaignDifficultyToWave() {
+  if (campaignLoop <= 1) return;
+
+  for (const enemy of enemies) {
+    const scaledHp = scaleEnemyHp(enemy.maxHp);
+    enemy.hp = scaledHp;
+    enemy.maxHp = scaledHp;
+    enemy.scoreValue = Math.round(enemy.scoreValue * getDifficultyMultiplier());
+    enemy.shootCooldown = scaleEnemyCooldown(enemy.shootCooldown);
+  }
+
+  enemyBaseMoveCooldown = Math.max(6, Math.floor(enemyBaseMoveCooldown * getEnemyTempoMultiplier()));
 }
 
 function getNextUpgradeAt(): number | null {
@@ -477,12 +518,18 @@ function startWave(waveNum: number) {
     });
     enemyBaseMoveCooldown = 15;
   }
+
+  applyCampaignDifficultyToWave();
 }
 
 // Start Game with Selected Ship
-function startGame(ship: PlayerShip) {
+function startGame(ship: PlayerShip, options: StartGameOptions = {}) {
   activeShip = { ...ship };
-  score = 0;
+  if (options.advanceDifficulty) campaignLoop++;
+  if (!options.preserveScore) {
+    score = 0;
+    campaignLoop = 1;
+  }
   wave = 1;
   playerLevel = 1;
   upgradePoints = 0;
@@ -496,7 +543,7 @@ function startGame(ship: PlayerShip) {
   enemiesDestroyed = 0;
   collectibleId = 0;
   gameOverReason = "SHIP DESTROYED";
-  setStatus("PLAYER-01 READY", 100);
+  setStatus(campaignLoop > 1 ? `LOOP ${campaignLoop} THREAT LEVEL ${Math.round(getDifficultyMultiplier() * 100)}%` : "PLAYER-01 READY", 140);
   
   initStars();
   startWave(wave);
@@ -691,7 +738,7 @@ function fireEnemy(enemy: Enemy) {
   const centerX = enemy.x + Math.floor(enemy.width / 2);
   const fromY = enemy.y + enemy.height;
   const pushEnemyBullet = (x: number, y: number, vx: number, vy: number, char: string, damage: number, color = eColor) => {
-    bullets.push({ x, y, vx, vy, color, char, isEnemy: true, damage });
+    bullets.push({ x, y, vx, vy, color, char, isEnemy: true, damage: scaleEnemyDamage(damage) });
   };
 
   if (!enemy.isBoss) {
@@ -714,11 +761,11 @@ function fireEnemy(enemy: Enemy) {
         y: enemy.y + enemy.height + 1,
         width: hunterAsset.sprite.width,
         height: hunterAsset.sprite.height,
-        hp: 36,
-        maxHp: 36,
-        scoreValue: 300,
+        hp: scaleEnemyHp(36),
+        maxHp: scaleEnemyHp(36),
+        scoreValue: Math.round(300 * getDifficultyMultiplier()),
         variant: hunterAsset,
-        shootCooldown: 55
+        shootCooldown: scaleEnemyCooldown(55)
       });
       setStatus("ROYAL GUARD DEPLOYED", 80);
     }
@@ -822,7 +869,9 @@ function updateGame() {
       enemy.shootCooldown--;
     } else {
       const bossCooldown = enemy.bossPattern === "titan" ? 48 : enemy.bossPattern === "leviathan" ? 38 : 44;
-      enemy.shootCooldown = Math.floor(Math.random() * (enemy.isBoss ? bossCooldown : 150)) + (enemy.isBoss ? 34 : 60);
+      const cooldownRange = scaleEnemyCooldown(enemy.isBoss ? bossCooldown : 150);
+      const cooldownFloor = scaleEnemyCooldown(enemy.isBoss ? 34 : 60);
+      enemy.shootCooldown = Math.floor(Math.random() * cooldownRange) + cooldownFloor;
       fireEnemy(enemy);
     }
   });
@@ -1053,7 +1102,8 @@ function renderMissionResult(result: "gameover" | "victory"): string {
     `${statLabel(label, labelColor)} ${statValue(value, valueWidth)}`;
   const statRows = [
     `${statCell("SCORE", formatNumber(score), theme.green, 8)}   ${statCell("HI", formatNumber(highScore), theme.purple, 8)}`,
-    `${statCell("WAVE", String(wave).padStart(2, "0"), theme.cyan, 8)}   ${statCell("SHIP", `LV ${playerLevel} ${activeShip.weapon}`, theme.lime, 16)}`,
+    `${statCell("LOOP", String(campaignLoop).padStart(2, "0"), theme.amber, 8)}   ${statCell("WAVE", String(wave).padStart(2, "0"), theme.cyan, 8)}`,
+    `${statCell("SHIP", `LV ${playerLevel} ${activeShip.weapon}`, theme.lime, 26)}`,
     `${statCell("STARS", String(upgradePoints), theme.amber, 8)}   ${statCell("BUGS", String(enemiesDestroyed), theme.red, 8)}   ${statCell("ACC", `${accuracy}%`, theme.green, 5)}`
   ];
   const reportRows = [
@@ -1070,7 +1120,7 @@ function renderMissionResult(result: "gameover" | "victory"): string {
     "",
     rgb("─".repeat(innerWidth), theme.border, colorEnabled),
     "",
-    centerText(bold(rgb("R: RETRY     Q: QUIT", theme.cyan, colorEnabled), colorEnabled), innerWidth),
+    centerText(bold(rgb("R: RESTART     Q: QUIT", theme.cyan, colorEnabled), colorEnabled), innerWidth),
     ""
   ];
   const resultHeight = 24;
@@ -1328,6 +1378,36 @@ function renderSplashScreen(): string {
   });
 }
 
+function frameFitsViewport(frame: string, termWidth: number, termHeight: number): boolean {
+  const lines = frame.split("\n");
+  if (lines.length > termHeight) return false;
+  return lines.every((line) => visibleLength(line) <= termWidth);
+}
+
+function renderViewportFallback(termWidth: number, termHeight: number): string {
+  const width = Math.max(20, Math.min(PLAYFIELD_WIDTH, termWidth));
+  const height = Math.max(4, Math.min(8, termHeight));
+  const body = [
+    centerText(bold(rgb("TERMINAL TOO SMALL", theme.amber, colorEnabled), colorEnabled), Math.max(1, width - 4)),
+    centerText(rgb(`${PLAYFIELD_WIDTH}x25 required`, theme.muted, colorEnabled), Math.max(1, width - 4)),
+    centerText(rgb(`${termWidth}x${termHeight} available`, theme.muted, colorEnabled), Math.max(1, width - 4)),
+    centerText(bold(rgb("Q: QUIT", theme.cyan, colorEnabled), colorEnabled), Math.max(1, width - 4))
+  ];
+
+  if (width < 24 || height < 6) {
+    return fitAnsi("TERMINAL TOO SMALL - Q: QUIT", width);
+  }
+
+  return box(" INVADER TUI ", body, {
+    width,
+    height,
+    borderStyle: "arcade",
+    accent: theme.amber,
+    color: colorEnabled,
+    paddingX: 1
+  });
+}
+
 // Complete render wrapper
 function render() {
   if (closed) return;
@@ -1581,6 +1661,10 @@ function render() {
     frameString = vicBox.split("\n").map(l => marginStr + l).join("\n");
   }
 
+  if (!frameFitsViewport(frameString, termWidth, termHeight)) {
+    frameString = renderViewportFallback(termWidth, termHeight);
+  }
+
   process.stdout.write(`${terminal.frameStart}${frameString}${terminal.frameEnd}`);
 }
 
@@ -1598,29 +1682,20 @@ function cleanupAndExit() {
 }
 
 // Restart action
-function restartGame() {
-  screen = "splash";
-  selectedShipIndex = 0;
-  score = 0;
-  wave = 1;
-  shotsFired = 0;
-  shotsHit = 0;
-  enemiesDestroyed = 0;
-  collectibles = [];
-  playerLevel = 1;
-  upgradePoints = 0;
-  playerShield = 0;
-  shieldPowerTicks = 0;
-  statusMessage = "READY";
-  statusMessageTicks = 0;
-  gameOverReason = "SHIP DESTROYED";
+function restartGame(result: "gameover" | "victory") {
+  if (result === "victory") {
+    startGame(activeShip, { preserveScore: true, advanceDifficulty: true });
+    return;
+  }
+
+  startGame(activeShip);
 }
 
 // Input parsing dispatcher
 const handleInput = (key: Buffer | string) => {
   const keyStr = String(key);
 
-  if (/^\u001b\[(?:<\d+;\d+;\d+[mM]|M)/.test(keyStr) || keyStr === "\u001b[I" || keyStr === "\u001b[O") {
+  if (isIgnoredTerminalInput(keyStr)) {
     return;
   }
 
@@ -1658,7 +1733,7 @@ const handleInput = (key: Buffer | string) => {
     }
   } else if (screen === "gameover" || screen === "victory") {
     if (keyStr === "r" || keyStr === "R") {
-      restartGame();
+      restartGame(screen);
       render();
     }
   }
@@ -1669,6 +1744,18 @@ const handleResize = () => {
   render();
 };
 
+function isIgnoredTerminalInput(input: string): boolean {
+  if (input === "\u001b[D" || input === "\u001b[C" || input === "\u001b[A" || input === "\u001b[B") {
+    return false;
+  }
+
+  if (input === "\u001b[I" || input === "\u001b[O") return true;
+  if (/^\u001b\[(?:<\d+;\d+;\d+[mM]|M)/.test(input)) return true;
+  if (/^\u001b\][\s\S]*(?:\u0007|\u001b\\)?$/.test(input)) return true;
+
+  return input.includes("\u001b");
+}
+
 // Start Main Dispatcher Loop
 function main() {
   if (!process.stdout.isTTY || !process.stdin.isTTY) {
@@ -1677,6 +1764,7 @@ function main() {
   }
 
   syncViewportSize();
+  process.stdout.write(terminal.disableMouse);
   process.stdout.write(terminal.enterLiveScreen);
   process.stdin.setRawMode(true);
   process.stdin.resume();
