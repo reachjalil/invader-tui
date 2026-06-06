@@ -1,7 +1,9 @@
 {
   "name": "invader-tui",
   "version": "0.1.0",
-  "private": true,
+  "description": "Retro arcade terminal renderer and playable space-invasion demo.",
+  "license": "MIT",
+  "author": "Omar Aderkaoui",
   "type": "module",
   "bin": {
     "invader-tui": "./src/cli.ts"
