@@ -2,6 +2,7 @@ import { describe, expect, test } from "vitest";
 import { enemySpecies, shipFamily } from "../assets/index.js";
 import { renderKitchenSink } from "../render/kitchenSink.js";
 import { validateAssetCatalog } from "../render/sprites.js";
+import { renderArcadeHud } from "../render/widgets.js";
 import { stripAnsi, visibleLength } from "../tui/ansi.js";
 
 function lines(frame: string): string[] {
@@ -63,5 +64,50 @@ describe("phase one kitchen sink", () => {
     for (const line of frameLines) {
       expect(visibleLength(line)).toBeLessThanOrEqual(width);
     }
+  });
+
+  test("arcade hud keeps gameplay counters compact and hides inactive shield", () => {
+    const frame = renderArcadeHud(85, {
+      score: 5790,
+      highScore: 15000,
+      wave: 2,
+      level: 1,
+      upgradePoints: 290,
+      nextUpgradeAt: 500,
+      enemiesRemaining: 4,
+      hp: 40,
+      maxHp: 50,
+      shield: 0,
+      maxShield: 20,
+      shieldActive: false
+    }, false);
+
+    expect(frame).toContain("1UP 005790");
+    expect(frame).toContain("WAVE 02");
+    expect(frame).toContain("STAR 290/500");
+    expect(frame).not.toContain("SHLD");
+    expect(frame).not.toContain("HEAT");
+  });
+
+  test("arcade hud shows shield and boss only when mechanically active", () => {
+    const frame = renderArcadeHud(85, {
+      score: 1200,
+      highScore: 15000,
+      wave: 3,
+      level: 2,
+      upgradePoints: 0,
+      nextUpgradeAt: 1000,
+      enemiesRemaining: 1,
+      hp: 60,
+      maxHp: 75,
+      shield: 30,
+      maxShield: 30,
+      shieldActive: true,
+      boss: { name: "Behemoth Titan", hp: 130, maxHp: 260 }
+    }, false);
+
+    expect(frame).toContain("SHLD");
+    expect(frame).toContain("BOSS");
+    expect(frame).toContain("BEHEMOTH TITAN");
   });
 });

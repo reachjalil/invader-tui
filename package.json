@@ -9,6 +9,7 @@
   "scripts": {
     "start": "tsx src/cli.ts start",
     "snapshot": "tsx src/cli.ts snapshot",
+    "demo": "tsx src/demo.ts",
     "check": "tsc --noEmit",
     "test": "vitest run"
   },

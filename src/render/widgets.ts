@@ -1,5 +1,5 @@
 import { enemySpecies, shipFamily, type GameAssetVariant } from "../assets/index.js";
-import { fitAnsi, rgb, theme, truncate } from "../tui/ansi.js";
+import { fitAnsi, joinAligned, rgb, theme, truncate } from "../tui/ansi.js";
 import { box, borderStyles } from "../tui/layout.js";
 import type { KitchenSinkFocus, KitchenSinkState, BorderStyle, BackgroundStyle } from "../sim/state.js";
 import { renderSprite } from "./sprites.js";
@@ -20,7 +20,7 @@ export function renderCounters(width: number, state: KitchenSinkState, color = t
   const c = state.counters;
   const innerWidth = width - 4;
   const score = String(c.score).padStart(6, "0");
-  const hiScore = "999999";
+  const hiScore = String(c.highScore).padStart(6, "0");
   const rows = [
     fitAnsi(`${rgb("1UP", theme.green, color)} ${score}   ${rgb("HI", theme.purple, color)} ${hiScore}`, innerWidth),
     fitAnsi(`${rgb("WAVE", theme.cyan, color)} ${String(c.wave).padStart(2, "0")}   ${rgb("CHAIN", theme.lime, color)} x${String(c.combo).padStart(2, "0")}`, innerWidth),
@@ -39,6 +39,74 @@ export function renderBar(label: string, value: number, width: number, color = t
   const empty = Math.max(0, meterWidth - filled);
   const meter = `${rgb("■".repeat(filled), theme[tone], color)}${rgb("□".repeat(empty), theme.grid, color)}`;
   return fitAnsi(`${fitAnsi(label, 4)} [${meter}] ${String(clamped).padStart(3, "0")}`, width);
+}
+
+export type ArcadeHudState = {
+  score: number;
+  highScore: number;
+  wave: number;
+  level: number;
+  upgradePoints: number;
+  nextUpgradeAt: number | null;
+  enemiesRemaining: number;
+  hp: number;
+  maxHp: number;
+  shield: number;
+  maxShield: number;
+  shieldActive: boolean;
+  boss?: {
+    name: string;
+    hp: number;
+    maxHp: number;
+  };
+};
+
+function percentage(value: number, max: number): number {
+  if (max <= 0) return 0;
+  return Math.max(0, Math.min(100, Math.round((value / max) * 100)));
+}
+
+export function renderArcadeHud(width: number, state: ArcadeHudState, color = true): string {
+  const scoreLine = joinAligned(
+    `${rgb("1UP", theme.green, color)} ${String(state.score).padStart(6, "0")}   ${rgb("HI", theme.purple, color)} ${String(state.highScore).padStart(6, "0")}`,
+    `${rgb("WAVE", theme.cyan, color)} ${String(state.wave).padStart(2, "0")}   ${rgb("BUGS", theme.red, color)} ${String(state.enemiesRemaining).padStart(2, "0")}`,
+    width,
+    3
+  );
+
+  const upgradeText = state.nextUpgradeAt
+    ? `${rgb("STAR", theme.amber, color)} ${String(state.upgradePoints).padStart(3, "0")}/${state.nextUpgradeAt}`
+    : `${rgb("STAR", theme.amber, color)} MAX`;
+  const vitals = [
+    renderBar("HP", percentage(state.hp, state.maxHp), 22, color, "green")
+  ];
+  if (state.shieldActive) {
+    vitals.push(renderBar("SHLD", percentage(state.shield, state.maxShield), 24, color, "blue"));
+  }
+
+  const levelLine = joinAligned(
+    `${rgb("LV", theme.lime, color)} ${state.level}   ${upgradeText}`,
+    vitals.join("  "),
+    width,
+    3
+  );
+
+  const rows = [
+    fitAnsi(scoreLine, width),
+    fitAnsi(levelLine, width)
+  ];
+
+  if (state.boss) {
+    const bossName = truncate(state.boss.name.toUpperCase(), 18);
+    rows.push(
+      fitAnsi(
+        `${rgb("BOSS", theme.red, color)} ${fitAnsi(bossName, 18)} ${renderBar("", percentage(state.boss.hp, state.boss.maxHp), Math.max(18, width - 26), color, "red").trimStart()}`,
+        width
+      )
+    );
+  }
+
+  return rows.join("\n");
 }
 
 export function renderBars(width: number, state: KitchenSinkState, color = true): string {

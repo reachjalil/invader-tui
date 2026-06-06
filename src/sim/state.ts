@@ -34,6 +34,7 @@ export type KitchenSinkState = {
   backgroundStyle: BackgroundStyle;
   counters: {
     score: number;
+    highScore: number;
     wave: number;
     combo: number;
     enemiesRemaining: number;
@@ -74,6 +75,7 @@ export function buildKitchenSinkState(options: KitchenSinkRenderOptions): Kitche
     backgroundStyle,
     counters: {
       score: 1200 + tick * 73 + combo * 40,
+      highScore: 999999,
       wave,
       combo,
       enemiesRemaining: Math.max(0, 64 - ((tick * 2) % 65)),
