@@ -1,52 +1,91 @@
 #!/usr/bin/env node
-import { renderKitchenSink, type KitchenSinkRenderOptions } from "./render/kitchenSink.js";
-import type { KitchenSinkFocus, BorderStyle, BackgroundStyle } from "./sim/state.js";
-
-const focusOrder: KitchenSinkFocus[] = ["enemies", "ships", "designs", "counters"];
+import { renderKitchenSinkBrowser } from "./kitchen/render.js";
+import { kitchenSinkComponents, componentIndexById } from "./kitchen/registry.js";
+import { applyKey, createBrowserState, resolveSelection, type KitchenBrowserState, type KitchenSinkFocusZone } from "./kitchen/state.js";
 
 process.stdout.on("error", (error: NodeJS.ErrnoException) => {
   if (error.code === "EPIPE") process.exit(0);
   throw error;
 });
 
-function parseArgs(argv: string[]): { command: string; options: KitchenSinkRenderOptions } {
-  const command = argv[0] ?? "snapshot";
+type CliOptions = {
+  width: number;
+  height: number;
+  tick: number;
+  color: boolean;
+  paused: boolean;
+  component?: string | undefined;
+  data?: string | undefined;
+  variant?: string | undefined;
+  density?: string | undefined;
+  focus?: KitchenSinkFocusZone | undefined;
+};
+
+function parseArgs(argv: string[]): { command: string; options: CliOptions } {
+  const command = argv[0] && !argv[0].startsWith("--") ? argv[0] : "start";
   const readNumber = (name: string, fallback: number): number => {
     const index = argv.indexOf(name);
     if (index >= 0) return Number(argv[index + 1] ?? fallback);
     return fallback;
   };
-  const focusArg = argv[argv.indexOf("--focus") + 1] as KitchenSinkFocus | undefined;
-  const focus = focusOrder.includes(focusArg as KitchenSinkFocus) ? focusArg : undefined;
-
-  const borderArg = argv[argv.indexOf("--border") + 1] as BorderStyle | undefined;
-  const borderStyle = ["single", "double", "heavy", "arcade", "block", "ornamental", "cyberpunk", "dashed", "terminal", "cryptic"].includes(borderArg as string) ? borderArg : undefined;
-
-  const bgArg = argv[argv.indexOf("--bg") + 1] as BackgroundStyle | undefined;
-  const backgroundStyle = [
-    "empty", "stars", "nebula", "warp", "asteroids", "matrix", "nova",
-    "blackhole", "pulsar", "radar", "hyperspace", "aurora",
-    "fire", "ice", "crt",
-    "sine", "spiral", "rain"
-  ].includes(bgArg as string) ? bgArg : undefined;
+  const readString = (name: string): string | undefined => {
+    const index = argv.indexOf(name);
+    return index >= 0 ? argv[index + 1] : undefined;
+  };
+  const focusArg = readString("--focus") as KitchenSinkFocusZone | undefined;
+  const focus = ["navigation", "preview", "options"].includes(focusArg as string) ? focusArg : undefined;
 
   return {
     command,
     options: {
-      width: readNumber("--cols", process.stdout.columns || 100),
-      height: readNumber("--rows", process.stdout.rows || 30),
+      width: readNumber("--cols", process.stdout.columns || 120),
+      height: readNumber("--rows", process.stdout.rows || 34),
       tick: readNumber("--tick", 0),
       color: argv.includes("--color"),
       paused: argv.includes("--paused"),
-      ...(focus ? { focus } : {}),
-      ...(borderStyle ? { borderStyle } : {}),
-      ...(backgroundStyle ? { backgroundStyle } : {})
+      ...(readString("--component") ? { component: readString("--component") } : {}),
+      ...(readString("--data") ? { data: readString("--data") } : {}),
+      ...(readString("--variant") ? { variant: readString("--variant") } : {}),
+      ...(readString("--density") ? { density: readString("--density") } : {}),
+      ...(focus ? { focus } : {})
     }
   };
 }
 
-function snapshot(options: KitchenSinkRenderOptions): void {
-  process.stdout.write(`${renderKitchenSink(options)}\n`);
+// Build a browser state from one-shot CLI flags (used by `snapshot`).
+function stateFromOptions(options: CliOptions): KitchenBrowserState {
+  const componentIndex = options.component ? componentIndexById(options.component) : 0;
+  let state = createBrowserState(componentIndex);
+  if (options.focus) state = { ...state, focus: options.focus };
+  const component = kitchenSinkComponents[state.componentIndex]!;
+  const choiceIndex = (groupId: string, choiceId?: string): number | undefined => {
+    if (!choiceId) return undefined;
+    const group = component.optionGroups.find((g) => g.id === groupId);
+    if (!group) return undefined;
+    const idx = group.choices.findIndex((c) => c.id === choiceId);
+    return idx >= 0 ? idx : undefined;
+  };
+  const dataIndex = choiceIndex("data", options.data);
+  const variantIndex = choiceIndex("variant", options.variant);
+  const densityIndex = choiceIndex("density", options.density);
+  return {
+    ...state,
+    ...(dataIndex !== undefined ? { dataIndex } : {}),
+    ...(variantIndex !== undefined ? { variantIndex } : {}),
+    ...(densityIndex !== undefined ? { densityIndex } : {})
+  };
+}
+
+function snapshot(options: CliOptions): void {
+  const frame = renderKitchenSinkBrowser({
+    width: options.width,
+    height: options.height,
+    color: options.color,
+    tick: options.tick,
+    paused: options.paused,
+    state: stateFromOptions(options)
+  });
+  process.stdout.write(`${frame}\n`);
 }
 
 const terminal = {
@@ -56,37 +95,33 @@ const terminal = {
   frameEnd: "\x1b[J"
 } as const;
 
-function start(options: KitchenSinkRenderOptions): void {
+// Normalize a raw stdin chunk into the key tokens understood by applyKey():
+// arrow/shift-tab escape sequences become "[A"/"[B"/"[C"/"[D"/"[Z".
+function normalizeKey(raw: string): string {
+  if (raw === "\u0003") return "q"; // Ctrl-C
+  if (raw.startsWith("\u001b") && raw.length > 1) return raw.slice(1); // ESC[A -> "[A"
+  return raw;
+}
+
+function start(options: CliOptions): void {
   if (!process.stdout.isTTY || !process.stdin.isTTY) {
     snapshot({ ...options, color: false });
     return;
   }
   let tick = options.tick ?? 0;
-  let paused = false;
-  let focusIndex = Math.max(0, focusOrder.indexOf(options.focus ?? "enemies"));
+  let paused = options.paused ?? false;
+  let state = stateFromOptions(options);
   let closed = false;
-
-  let borderIndex = 0;
-  const borderStyles: BorderStyle[] = ["single", "double", "heavy", "arcade", "block", "ornamental", "cyberpunk", "dashed", "terminal", "cryptic"];
-  let backgroundIndex = 1; // Default to stars
-  const backgroundStyles: BackgroundStyle[] = [
-    "empty", "stars", "nebula", "warp", "asteroids", "matrix", "nova",
-    "blackhole", "pulsar", "radar", "hyperspace", "aurora",
-    "fire", "ice", "crt",
-    "sine", "spiral", "rain"
-  ];
 
   const render = () => {
     if (closed) return;
-    const frame = renderKitchenSink({
+    const frame = renderKitchenSinkBrowser({
       width: process.stdout.columns || options.width,
       height: process.stdout.rows || options.height,
       color: true,
       tick,
       paused,
-      focus: focusOrder[focusIndex]!,
-      borderStyle: borderStyles[borderIndex]!,
-      backgroundStyle: backgroundStyles[backgroundIndex]!
+      state
     });
     process.stdout.write(`${terminal.frameStart}${frame}${terminal.frameEnd}`);
   };
@@ -114,29 +149,16 @@ function start(options: KitchenSinkRenderOptions): void {
   }, 140);
 
   const handleInput = (key: Buffer | string) => {
-    const keyText = String(key);
-    let handled = true;
-
-    if (keyText === "q" || keyText === "\u0003") {
+    const action = applyKey(state, normalizeKey(String(key)));
+    if (action.kind === "quit") {
       stop();
       return;
     }
-    if (keyText === "p") {
-      paused = !paused;
-    } else if (keyText === "b") {
-      borderIndex = (borderIndex + 1) % borderStyles.length;
-    } else if (keyText === "v") {
-      backgroundIndex = (backgroundIndex + 1) % backgroundStyles.length;
-    } else if (keyText === "t" || keyText === "\t") {
-      focusIndex = (focusIndex + 1) % focusOrder.length;
-    } else if (keyText === "f") {
-      // Fire/step tick manually
-      tick += 1;
-    } else {
-      handled = false;
-    }
-
-    if (handled) render();
+    if (action.kind === "pause") paused = !paused;
+    else if (action.kind === "step") tick += 1;
+    else if (action.kind === "state") state = action.state;
+    else return;
+    render();
   };
 
   process.stdout.write(terminal.enterLiveScreen);
@@ -158,3 +180,6 @@ if (command === "start") {
   process.stderr.write(`Unknown command: ${command}\n`);
   process.exit(1);
 }
+
+// Re-exported for tests and programmatic use.
+export { renderKitchenSinkBrowser, resolveSelection };

@@ -7,6 +7,13 @@ settings:
 importers:
 
   .:
+    dependencies:
+      '@prettui/components':
+        specifier: ^0.1.1
+        version: 0.1.1
+      '@prettui/core':
+        specifier: ^0.1.1
+        version: 0.1.1
     devDependencies:
       '@types/node':
         specifier: ^24.0.0
@@ -337,6 +344,14 @@ packages:
 
   '@jridgewell/sourcemap-codec@1.5.5':
     resolution: {integrity: sha512-cYQ9310grqxueWbl+WuIUIaiUaDcj7WOq5fVhEljNVgRfOUhY9fy2zTvfoqWsnebh8Sl70VScFbICvJnLKB0Og==}
+
+  '@prettui/components@0.1.1':
+    resolution: {integrity: sha512-5iabQsIAGGBMnQcy9qEuIcUhcFO2eAoBzbwPD14N/tuAhPGd1v70Z4g1IECMTMS3KPFcNhGGs+X0tbY4fg/Gmg==}
+    engines: {node: '>=22.12.0'}
+
+  '@prettui/core@0.1.1':
+    resolution: {integrity: sha512-cHS3wJajCnRuC2AJCvV/Dx0LIlzMof2sv7Z8XBYaZ3wVt7pEAOhdp6UKkDOWSVC8RqQRHPBKCfofu4PVBMshOg==}
+    engines: {node: '>=22.12.0'}
 
   '@rollup/rollup-android-arm-eabi@4.61.1':
     resolution: {integrity: sha512-JnBB8MdXj45cajvTuO5FmPlvFVJRQgvrz1uSEl3NwqFnReAPGwb8EanbGi4z2nRaqLzjJSv5/JmycoTKlRZxHA==}
@@ -908,6 +923,12 @@ snapshots:
     optional: true
 
   '@jridgewell/sourcemap-codec@1.5.5': {}
+
+  '@prettui/components@0.1.1':
+    dependencies:
+      '@prettui/core': 0.1.1
+
+  '@prettui/core@0.1.1': {}
 
   '@rollup/rollup-android-arm-eabi@4.61.1':
     optional: true

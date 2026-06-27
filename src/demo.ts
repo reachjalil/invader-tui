@@ -13,10 +13,12 @@ import {
   shipClassConfigs,
   shipDesignPresets,
   shipPaintSchemes,
+  turboEntityVariants,
   type ShipCosmeticSlotId,
   type ShipDesign,
   type ShipDesignModuleSlotId,
-  type SpriteFrame
+  type SpriteFrame,
+  type TurboEntityKind
 } from "./assets/index.js";
 import { renderArcadeHud, renderShipDesignBuilder, type ArcadeHudState, type ShipBuilderSection } from "./render/widgets.js";
 import { renderSprite } from "./render/sprites.js";
@@ -71,6 +73,24 @@ type Enemy = {
   spin?: number;
   damage?: number;
   phase?: number;
+  behavior?: "formation" | "diver";
+  baseY?: number;
+  targetY?: number;
+};
+
+// Procedural spec for one classic-mode wave. Waves divisible by 4 are boss
+// fights (wave 4 vanguard mini-boss, wave 8 final boss); the rest escalate
+// formation size, march tempo, dive frequency, and aimed-fire chance.
+type ClassicWaveSpec = {
+  kind: "formation" | "boss";
+  rows: number;
+  columns: number;
+  tier: 1 | 2 | 3;
+  moveCooldown: number;
+  diveChance: number;
+  aimChance: number;
+  bossHpScale: number;
+  escortCount: number;
 };
 
 type Particle = {
@@ -91,7 +111,7 @@ type Star = {
   speed: number;
 };
 
-type CollectibleKind = "star" | "bonus" | "shield" | "cloak" | "cache";
+type CollectibleKind = "star" | "bonus" | "shield" | "cache";
 
 type Collectible = {
   id: number;
@@ -117,10 +137,8 @@ type PlayerShip = {
   desc: string;
 };
 
-type PlayerSelectionSlot = "p1" | "com";
 type GameMode = "classic" | "turbo";
 type StartScreenMode = "select" | "customize";
-type TurboEntityKind = "asteroid" | "raider" | "rotor" | "mine" | "comet" | "dreadnought";
 type TurboHeading = 0 | 1 | 2 | 3;
 
 type GameModeConfig = {
@@ -130,23 +148,9 @@ type GameModeConfig = {
   accent: Rgb;
 };
 
-type ComWingmate = {
-  ship: PlayerShip;
-  x: number;
-  hp: number;
-  maxHp: number;
-  shield: number;
-  maxShield: number;
-  shootCooldown: number;
-  shieldPowerTicks: number;
-  level: number;
-  destroyed: boolean;
-};
-
 type StartGameOptions = {
   preserveScore?: boolean;
   advanceDifficulty?: boolean;
-  comShip?: PlayerShip | null;
 };
 
 type TurboSpecialEffect = {
@@ -189,9 +193,9 @@ let PLAYFIELD_WIDTH = MIN_PLAYFIELD_WIDTH;
 const SPLASH_HEIGHT = 18;
 const FRAME_INTERVAL = 40; // 25 FPS
 const MAX_SHIP_LEVEL = 3;
+const CLASSIC_FINAL_WAVE = 8;
 const BASE_UPGRADE_POINTS = 500;
 const SHIELD_POWER_TICKS = 600;
-const CLOAK_POWER_TICKS = 360;
 const gameModeOrder: GameMode[] = ["classic", "turbo"];
 const gameModeConfigs: Record<GameMode, GameModeConfig> = {
   classic: {
@@ -205,90 +209,6 @@ const gameModeConfigs: Record<GameMode, GameModeConfig> = {
     boardWidth: TURBO_BOARD_WIDTH,
     boardHeight: TURBO_BOARD_HEIGHT,
     accent: theme.amber
-  }
-};
-
-const turboEntityVariants: Record<TurboEntityKind, any> = {
-  asteroid: {
-    id: "turbo-sidewall-asteroid",
-    name: "Sidewall Asteroid",
-    role: "large slow rotating side hazard",
-    tone: "slate",
-    sprite: { width: 7, height: 4, lines: [" ╓───╖ ", "▞▒▓██▓▚", "▚██▓▒░▞", " ╙───╜ "] },
-    idle: [
-      { width: 7, height: 4, lines: [" ╓───╖ ", "▞▒▓██▓▚", "▚██▓▒░▞", " ╙───╜ "] },
-      { width: 7, height: 4, lines: [" ╓───╖ ", "▞▓██▓▒▚", "▚█▓▒░░▞", " ╙───╜ "] },
-      { width: 7, height: 4, lines: [" ╓───╖ ", "▞██▓▒░▚", "▚▓▒░░█▞", " ╙───╜ "] },
-      { width: 7, height: 4, lines: [" ╓───╖ ", "▞█▓▒░░▚", "▚▒░░██▞", " ╙───╜ "] }
-    ],
-    tags: ["turbo", "asteroid"],
-    attachmentPoints: [{ id: "core", label: "Core", x: 3, y: 2, accepts: ["armor"] }]
-  },
-  raider: {
-    id: "turbo-needle-raider",
-    name: "Needle Raider",
-    role: "pursuit fighter",
-    tone: "red",
-    sprite: { width: 5, height: 2, lines: ["<▲═> ", "▞██▚"] },
-    idle: [
-      { width: 5, height: 2, lines: ["<▲═> ", "▞██▚"] },
-      { width: 5, height: 2, lines: ["<▼═> ", "▚██▞"] }
-    ],
-    tags: ["turbo", "raider"],
-    attachmentPoints: [{ id: "nose", label: "Nose", x: 2, y: 0, accepts: ["cannon"] }]
-  },
-  rotor: {
-    id: "turbo-rotor-drone",
-    name: "Rotor Drone",
-    role: "rotating ambusher",
-    tone: "purple",
-    sprite: { width: 5, height: 2, lines: ["═o═o═", " ╱║╲ "] },
-    idle: [
-      { width: 5, height: 2, lines: ["═o═o═", " ╱║╲ "] },
-      { width: 5, height: 2, lines: ["╓o─o╖", " ═╬═ "] },
-      { width: 5, height: 2, lines: ["╢o─o╟", " ╲║╱ "] }
-    ],
-    tags: ["turbo", "rotor"],
-    attachmentPoints: [{ id: "hub", label: "Hub", x: 2, y: 0, accepts: ["engine"] }]
-  },
-  mine: {
-    id: "turbo-static-mine",
-    name: "Static Mine",
-    role: "space lane obstacle",
-    tone: "amber",
-    sprite: { width: 3, height: 3, lines: [" ┿ ", "┿█┿", " ┿ "] },
-    idle: [
-      { width: 3, height: 3, lines: [" ┿ ", "┿█┿", " ┿ "] },
-      { width: 3, height: 3, lines: [" ╳ ", "╳▓╳", " ╳ "] }
-    ],
-    tags: ["turbo", "mine"],
-    attachmentPoints: [{ id: "charge", label: "Charge", x: 1, y: 1, accepts: ["reactor"] }]
-  },
-  comet: {
-    id: "turbo-razor-comet",
-    name: "Razor Comet",
-    role: "high speed crossing hazard",
-    tone: "lime",
-    sprite: { width: 6, height: 2, lines: ["═══▶o ", "  ░░  "] },
-    idle: [
-      { width: 6, height: 2, lines: ["═══▶o ", "  ░░  "] },
-      { width: 6, height: 2, lines: ["───▷O ", " ░░░  "] }
-    ],
-    tags: ["turbo", "comet"],
-    attachmentPoints: [{ id: "tail", label: "Tail", x: 0, y: 0, accepts: ["engine"] }]
-  },
-  dreadnought: {
-    id: "turbo-dreadnought-v2",
-    name: "Dread Gate V2",
-    role: "version two boss",
-    tone: "red",
-    sprite: { width: 11, height: 4, lines: ["  ╭═════╮  ", "<║ █ █ █ ║>", "  ╰═╦═╦═╯  ", "   ▞███▚   "] },
-    idle: [
-      { width: 11, height: 4, lines: ["  ╭═════╮  ", "<║ █ █ █ ║>", "  ╰═╦═╦═╯  ", "   ▞███▚   "] },
-      { width: 11, height: 4, lines: ["  ╭═════╮  ", "<║ ▓ ▓ ▓ ║>", "  ╰═╩═╩═╯  ", "   ▚███▞   "] }
-    ],
-    tags: ["turbo", "boss"],
-    attachmentPoints: [{ id: "core", label: "Core", x: 5, y: 1, accepts: ["cannon"] }]
   }
 };
 
@@ -333,9 +253,6 @@ let screen: "splash" | "mode" | "start" | "playing" | "gameover" | "victory" = "
 let selectedGameMode: GameMode = "classic";
 let menuAnimationTick = 0;
 let selectedShipIndex = 0;
-let selectedPlayerCount: 1 | 2 = 1;
-let selectedComShipIndex = 1;
-let selectedLoadoutSlot: PlayerSelectionSlot = "p1";
 let startScreenMode: StartScreenMode = "select";
 const builderSections: ShipBuilderSection[] = [
   "color",
@@ -367,8 +284,6 @@ let playerMaxShield = 50;
 let playerSpeed = 1.5;
 let playerShootCooldown = 0;
 let activeShip = playerShips[0]!;
-let activeComShip: PlayerShip | null = null;
-let comWingmate: ComWingmate | null = null;
 
 let enemies: Enemy[] = [];
 let bullets: Bullet[] = [];
@@ -384,7 +299,6 @@ let collectibleId = 0;
 let playerLevel = 1;
 let upgradePoints = 0;
 let shieldPowerTicks = 0;
-let cloakPowerTicks = 0;
 let turboSpecialCharge = TURBO_SPECIAL_MAX_CHARGE;
 let turboWaveQuota = 0;
 let turboWaveSpawned = 0;
@@ -411,6 +325,22 @@ let enemyDirection = 1;
 let enemyMoveTimer = 0;
 let enemyBaseMoveCooldown = 20; // in ticks
 let enemyStepCount = 0;
+let formationDrop = 0;
+let waveStartEnemyCount = 18;
+let classicWaveSpec: ClassicWaveSpec | null = null;
+
+// Classic-mode flight model: thrust accumulates into velocity, friction bleeds
+// it off, so handling is governed by the ship's speed/turnRate stats.
+let playerVX = 0;
+let playerVY = 0;
+let heldMoveX = 0;
+let heldMoveY = 0;
+let heldMoveTicks = 0;
+let autofireTicks = 0;
+let playerInvulnTicks = 0;
+let combo = 0;
+let comboTicks = 0;
+let waveBreakTicks = 0;
 
 let shakeIntensity = 0;
 let flashTicks = 0;
@@ -444,10 +374,14 @@ function getTurboPlayerMinY(): number {
   return Math.max(3, Math.floor(BOARD_HEIGHT * 0.32));
 }
 
+function getClassicPlayerMinY(): number {
+  return Math.max(2, Math.floor(BOARD_HEIGHT * 0.55));
+}
+
 function clampShipY(y: number, shipHeight: number): number {
   const homeY = getPlayerHomeY(shipHeight);
-  if (!isTurboMode()) return homeY;
-  return Math.max(getTurboPlayerMinY(), Math.min(homeY, y));
+  const minY = isTurboMode() ? getTurboPlayerMinY() : getClassicPlayerMinY();
+  return Math.max(minY, Math.min(homeY, y));
 }
 
 function getInvasionLineY(): number {
@@ -480,9 +414,6 @@ function shiftTurboWorld(deltaX: number, deltaY: number) {
   for (const enemy of enemies) {
     enemy.x += deltaX;
     enemy.y += deltaY;
-  }
-  if (comWingmate && !comWingmate.destroyed) {
-    comWingmate.x += deltaX;
   }
 
   const routeLimit = getTurboRouteLimit();
@@ -537,10 +468,6 @@ function normalizeViewportState() {
   playerX = clampShipX(playerX, pWidth);
   playerY = clampShipY(playerY, pHeight);
 
-  if (comWingmate && !comWingmate.destroyed) {
-    comWingmate.x = clampShipX(comWingmate.x, comWingmate.ship.variant.sprite.width);
-  }
-
   for (const star of stars) {
     if (star.x < 0 || star.x >= BOARD_WIDTH || star.y < 0 || star.y >= BOARD_HEIGHT) {
       star.x = Math.floor(Math.random() * BOARD_WIDTH);
@@ -591,10 +518,39 @@ function centerText(text: string, width: number): string {
   return " ".repeat(left) + text + " ".repeat(right);
 }
 
-function getWaveStartEnemiesCount(waveNum = wave): number {
-  if (waveNum === 1) return isTurboMode() ? 32 : 18;
-  if (waveNum === 2) return isTurboMode() ? 28 : 15;
-  return isTurboMode() ? 7 : 5;
+function isClassicBossWave(waveNum = wave): boolean {
+  return waveNum % 4 === 0;
+}
+
+function getClassicWaveSpec(waveNum: number): ClassicWaveSpec {
+  if (isClassicBossWave(waveNum)) {
+    const finalBoss = waveNum >= CLASSIC_FINAL_WAVE;
+    return {
+      kind: "boss",
+      rows: 0,
+      columns: 0,
+      tier: 3,
+      moveCooldown: finalBoss ? 12 : 15,
+      diveChance: 0,
+      aimChance: 0.35,
+      bossHpScale: finalBoss ? 1.3 : 0.7,
+      escortCount: finalBoss ? 6 : 4
+    };
+  }
+
+  const stage = ((waveNum - 1) % 4) + 1; // 1..3 inside each 4-wave sector
+  const sector = Math.floor((waveNum - 1) / 4); // 0 = rookie half, 1 = veteran half
+  return {
+    kind: "formation",
+    rows: Math.min(4, 2 + stage),
+    columns: 6 + sector,
+    tier: Math.min(3, stage + sector) as 1 | 2 | 3,
+    moveCooldown: Math.max(10, 23 - stage * 3 - sector * 4),
+    diveChance: 0.04 + stage * 0.03 + sector * 0.05,
+    aimChance: Math.min(0.55, 0.08 * stage + 0.18 * sector),
+    bossHpScale: 1,
+    escortCount: 0
+  };
 }
 
 function getDifficultyMultiplier(): number {
@@ -639,21 +595,6 @@ function buildLeveledShip(ship: PlayerShip, level: number): PlayerShip {
   return buildPlayerShipFromDesign(ship.design, level);
 }
 
-function syncComWingmateLevel(heal = false) {
-  if (!comWingmate || comWingmate.destroyed) return;
-
-  const hpRatio = comWingmate.maxHp > 0 ? comWingmate.hp / comWingmate.maxHp : 1;
-  const leveledShip = buildLeveledShip(comWingmate.ship, playerLevel);
-  comWingmate.ship = leveledShip;
-  comWingmate.level = playerLevel;
-  comWingmate.maxHp = leveledShip.hp;
-  comWingmate.maxShield = leveledShip.shield;
-  comWingmate.hp = heal
-    ? Math.min(comWingmate.maxHp, Math.max(comWingmate.hp, Math.round(comWingmate.maxHp * hpRatio)) + 16)
-    : Math.min(comWingmate.hp, comWingmate.maxHp);
-  comWingmate.shield = Math.min(comWingmate.shield, comWingmate.maxShield);
-}
-
 function setStatus(message: string, ticks = 90) {
   statusMessage = message;
   statusMessageTicks = ticks;
@@ -668,7 +609,6 @@ function applyShipLevel(heal = false) {
   playerSpeed = activeShip.speed;
   playerHp = heal ? Math.min(playerMaxHp, Math.max(playerHp, Math.round(playerMaxHp * hpRatio)) + 20) : playerMaxHp;
   playerShield = Math.min(playerShield, playerMaxShield);
-  syncComWingmateLevel(heal);
 }
 
 function addUpgradePoints(value: number) {
@@ -686,29 +626,25 @@ function addUpgradePoints(value: number) {
   }
 }
 
+function getComboMultiplier(): number {
+  return Math.min(5, 1 + Math.floor(combo / 5));
+}
+
+// Kills chain into a combo: each adds to the streak, the streak raises the
+// score multiplier, and taking a hit resets it.
+function addKillScore(value: number) {
+  combo++;
+  comboTicks = 90;
+  const multiplier = getComboMultiplier();
+  score += Math.round(value * multiplier);
+  if (multiplier > 1 && combo % 5 === 0) setStatus(`COMBO x${multiplier}`, 45);
+}
+
 function activateShield() {
   playerShield = playerMaxShield;
   shieldPowerTicks = SHIELD_POWER_TICKS;
   setStatus("SHIELD ONLINE", 120);
   spawnExplosion(playerX + activeShip.variant.sprite.width / 2, playerY, theme.blue, 18);
-}
-
-function activateCloak() {
-  cloakPowerTicks = CLOAK_POWER_TICKS;
-  setStatus("CLOAK FIELD ONLINE", 120);
-  spawnExplosion(playerX + activeShip.variant.sprite.width / 2, playerY, theme.purple, 16);
-}
-
-function activateComShield() {
-  if (!comWingmate || comWingmate.destroyed) {
-    activateShield();
-    return;
-  }
-
-  comWingmate.shield = comWingmate.maxShield;
-  comWingmate.shieldPowerTicks = SHIELD_POWER_TICKS;
-  setStatus("COM SHIELD ONLINE", 120);
-  spawnExplosion(comWingmate.x + comWingmate.ship.variant.sprite.width / 2, playerY, theme.blue, 16);
 }
 
 function buildDemoHudState(): ArcadeHudState {
@@ -738,24 +674,11 @@ function buildDemoHudState(): ArcadeHudState {
   return hudState;
 }
 
-function renderComHudText(): string {
-  if (!activeComShip) return "";
-  if (!comWingmate || comWingmate.destroyed) {
-    return `${rgb("COM", theme.amber, colorEnabled)} ${rgb("LOST", theme.red, colorEnabled)}`;
-  }
-
-  const shipCode = comWingmate.ship.name.split(" ")[0]?.toUpperCase() ?? "ALLY";
-  const hp = `${Math.max(0, Math.ceil(comWingmate.hp))}/${comWingmate.maxHp}`;
-  const shield = comWingmate.shield > 0 ? `  ${rgb("SH", theme.blue, colorEnabled)} ${Math.ceil(comWingmate.shield)}` : "";
-  return `${rgb("COM", theme.amber, colorEnabled)} ${shipCode} ${rgb("HP", theme.green, colorEnabled)} ${hp}${shield}`;
-}
-
 function renderGameplaySupportLine(width: number): string {
-  const comText = renderComHudText();
   const statusText = statusMessageTicks > 0 ? rgb(statusMessage, theme.amber, colorEnabled) : "";
   const objectiveText = isTurboMode() ? rgb(renderTurboObjectiveText(), theme.cyan, colorEnabled) : "";
-  const cloakText = cloakPowerTicks > 0 ? rgb(`CLOAK ${Math.ceil(cloakPowerTicks / 25)}`, theme.purple, colorEnabled) : "";
-  const leftText = [comText, objectiveText, cloakText].filter(Boolean).join("  ");
+  const comboText = combo >= 2 ? rgb(`COMBO x${getComboMultiplier()} (${combo})`, theme.lime, colorEnabled) : "";
+  const leftText = [objectiveText, comboText].filter(Boolean).join("  ");
 
   if (leftText && statusText) return fitAnsi(joinAligned(leftText, statusText, width, 3), width);
   if (leftText) return centerText(leftText, width);
@@ -989,6 +912,122 @@ function startTurboWave(waveNum: number) {
 }
 
 // Generate Wave
+// Enemy pools per formation tier. Tier 3 reuses the L2 frames as hardened
+// veterans so big L3 sprites stay reserved for bosses.
+const classicFormationTiers: Record<1 | 2 | 3, { id: string; hp: number; score: number }[]> = {
+  1: [
+    { id: "enemy-spore-pod-l1", hp: 30, score: 80 },
+    { id: "enemy-tick-drone-l1", hp: 18, score: 120 },
+    { id: "enemy-mite-grunt-l1", hp: 24, score: 100 }
+  ],
+  2: [
+    { id: "enemy-warden-sentinel-l2", hp: 55, score: 300 },
+    { id: "enemy-stinger-elite-l2", hp: 42, score: 280 },
+    { id: "enemy-mite-hunter-l2", hp: 48, score: 250 }
+  ],
+  3: [
+    { id: "enemy-warden-sentinel-l2", hp: 72, score: 420 },
+    { id: "enemy-stinger-elite-l2", hp: 58, score: 390 },
+    { id: "enemy-mite-hunter-l2", hp: 64, score: 360 }
+  ]
+};
+
+function spawnClassicFormationWave(waveNum: number, spec: ClassicWaveSpec) {
+  const pool = classicFormationTiers[spec.tier];
+  const spacing = Math.max(8, Math.min(11, Math.floor((BOARD_WIDTH - 10) / spec.columns)));
+  const spawnWidth = spec.columns * spacing;
+  const startX = Math.floor((BOARD_WIDTH - spawnWidth) / 2) + 2;
+
+  for (let r = 0; r < spec.rows; r++) {
+    const entry = pool[r % pool.length]!;
+    const variantAsset = enemySpecies.variants.find((v) => v.id === entry.id) || enemySpecies.variants[0]!;
+    for (let c = 0; c < spec.columns; c++) {
+      const baseY = 1 + r * 3;
+      enemies.push({
+        id: `${entry.id}-${waveNum}-${r}-${c}`,
+        name: variantAsset.name,
+        x: startX + c * spacing,
+        // Fly-in entrance: spawn above the board, staggered per row/column,
+        // and descend to targetY before joining the march.
+        y: baseY - (spec.rows * 3 + 6) - (c % 3) * 2,
+        width: variantAsset.sprite.width,
+        height: variantAsset.sprite.height,
+        hp: entry.hp,
+        maxHp: entry.hp,
+        scoreValue: entry.score,
+        variant: variantAsset,
+        shootCooldown: Math.floor(Math.random() * 90) + 60,
+        behavior: "formation",
+        baseY,
+        targetY: baseY
+      });
+    }
+  }
+  setStatus(spec.tier >= 3 ? `VETERAN WAVE ${waveNum}` : `WAVE ${waveNum}`, 120);
+}
+
+function spawnClassicBossWave(waveNum: number, spec: ClassicWaveSpec) {
+  const finalBoss = waveNum >= CLASSIC_FINAL_WAVE;
+  const bossConfigs = [
+    { id: "enemy-mite-monarch-l3", label: "Mite Monarch", hp: 220, score: 2200, pattern: "monarch" as const },
+    { id: "enemy-behemoth-titan-l3", label: "Behemoth Titan", hp: 260, score: 2600, pattern: "titan" as const },
+    { id: "enemy-leviathan-core-l3", label: "Leviathan Core", hp: 210, score: 3000, pattern: "leviathan" as const }
+  ];
+  const bossConfig = bossConfigs[Math.floor(Math.random() * bossConfigs.length)]!;
+  const bossAsset = enemySpecies.variants.find((v) => v.id === bossConfig.id) || enemySpecies.variants[6]!;
+  const bossHp = Math.max(60, Math.round(bossConfig.hp * spec.bossHpScale));
+  const bossLabel = finalBoss ? bossConfig.label : `Vanguard ${bossConfig.label}`;
+
+  enemies.push({
+    id: `boss-${bossConfig.pattern}-${waveNum}`,
+    name: `${bossLabel} (BOSS)`,
+    x: Math.floor((BOARD_WIDTH - 6) / 2),
+    y: -4,
+    width: bossAsset.sprite.width,
+    height: bossAsset.sprite.height,
+    hp: bossHp,
+    maxHp: bossHp,
+    scoreValue: Math.round(bossConfig.score * spec.bossHpScale),
+    variant: bossAsset,
+    shootCooldown: 30,
+    isBoss: true,
+    bossPattern: bossConfig.pattern,
+    behavior: "formation",
+    baseY: 2,
+    targetY: 2
+  });
+  setStatus(finalBoss ? `${bossConfig.label.toUpperCase()} APPROACHES` : `VANGUARD ${bossConfig.label.toUpperCase()} INBOUND`, 180);
+
+  const hunterAsset = enemySpecies.variants.find((v) => v.id === "enemy-mite-hunter-l2") || enemySpecies.variants[3]!;
+  const escortSlots = [
+    { x: 10, y: 3 },
+    { x: BOARD_WIDTH - 14, y: 3 },
+    { x: 22, y: 5 },
+    { x: BOARD_WIDTH - 26, y: 5 },
+    { x: 34, y: 7 },
+    { x: BOARD_WIDTH - 38, y: 7 }
+  ];
+
+  escortSlots.slice(0, spec.escortCount).forEach((slot, idx) => {
+    enemies.push({
+      id: `escort-hunter-${waveNum}-${idx}`,
+      name: hunterAsset.name,
+      x: slot.x,
+      y: slot.y - 12 - idx,
+      width: hunterAsset.sprite.width,
+      height: hunterAsset.sprite.height,
+      hp: 48,
+      maxHp: 48,
+      scoreValue: 250,
+      variant: hunterAsset,
+      shootCooldown: Math.floor(Math.random() * 60) + 40,
+      behavior: "formation",
+      baseY: slot.y,
+      targetY: slot.y
+    });
+  });
+}
+
 function startWave(waveNum: number) {
   enemies = [];
   bullets = [];
@@ -1000,156 +1039,20 @@ function startWave(waveNum: number) {
     startTurboWave(waveNum);
     return;
   }
-  setStatus(waveNum === 3 ? "BOSS WARNING" : `WAVE ${waveNum}`, 120);
 
-  if (waveNum === 1) {
-    const columns = isTurboMode() ? 8 : 6;
-    const rows = isTurboMode() ? 4 : 3;
-    const spawnWidth = columns * 8;
-    const startX = Math.floor((BOARD_WIDTH - spawnWidth) / 2);
-    
-    const variants = [
-      { type: "enemy-spore-pod-l1", hp: 30, score: 80 },
-      { type: "enemy-tick-drone-l1", hp: 18, score: 120 },
-      { type: "enemy-mite-grunt-l1", hp: 24, score: 100 }
-    ];
+  formationDrop = 0;
+  const spec = getClassicWaveSpec(waveNum);
+  classicWaveSpec = spec;
 
-    for (let r = 0; r < rows; r++) {
-      const spec = variants[r % variants.length]!;
-      const variantAsset = enemySpecies.variants.find(v => v.id === spec.type) || enemySpecies.variants[0]!;
-      
-      for (let c = 0; c < columns; c++) {
-        enemies.push({
-          id: `${spec.type}-${r}-${c}`,
-          name: variantAsset.name,
-          x: startX + c * 8,
-          y: 1 + r * 3,
-          width: variantAsset.sprite.width,
-          height: variantAsset.sprite.height,
-          hp: spec.hp,
-          maxHp: spec.hp,
-          scoreValue: spec.score,
-          variant: variantAsset,
-          shootCooldown: Math.floor(Math.random() * 100) + 50
-        });
-      }
-    }
-    enemyBaseMoveCooldown = isTurboMode() ? 16 : 22;
-  } else if (waveNum === 2) {
-    const columns = isTurboMode() ? 7 : 5;
-    const rows = isTurboMode() ? 4 : 3;
-    const spawnWidth = columns * 10;
-    const startX = Math.floor((BOARD_WIDTH - spawnWidth) / 2);
-    
-    const variants = [
-      { type: "enemy-warden-sentinel-l2", hp: 55, score: 300 },
-      { type: "enemy-stinger-elite-l2", hp: 42, score: 280 },
-      { type: "enemy-mite-hunter-l2", hp: 48, score: 250 }
-    ];
-
-    for (let r = 0; r < rows; r++) {
-      const spec = variants[r % variants.length]!;
-      const variantAsset = enemySpecies.variants.find(v => v.id === spec.type) || enemySpecies.variants[0]!;
-      
-      for (let c = 0; c < columns; c++) {
-        enemies.push({
-          id: `${spec.type}-${r}-${c}`,
-          name: variantAsset.name,
-          x: startX + c * 10 + 2,
-          y: 1 + r * 3,
-          width: variantAsset.sprite.width,
-          height: variantAsset.sprite.height,
-          hp: spec.hp,
-          maxHp: spec.hp,
-          scoreValue: spec.score,
-          variant: variantAsset,
-          shootCooldown: Math.floor(Math.random() * 80) + 30
-        });
-      }
-    }
-    enemyBaseMoveCooldown = isTurboMode() ? 13 : 18;
+  if (spec.kind === "boss") {
+    spawnClassicBossWave(waveNum, spec);
   } else {
-    // Wave 3: BOSS WAVE
-    const bossConfigs = [
-      { id: "enemy-mite-monarch-l3", label: "Mite Monarch", hp: 220, score: 2200, pattern: "monarch" as const },
-      { id: "enemy-behemoth-titan-l3", label: "Behemoth Titan", hp: 260, score: 2600, pattern: "titan" as const },
-      { id: "enemy-leviathan-core-l3", label: "Leviathan Core", hp: 210, score: 3000, pattern: "leviathan" as const }
-    ];
-    const bossConfig = bossConfigs[Math.floor(Math.random() * bossConfigs.length)]!;
-    const bossAsset = enemySpecies.variants.find(v => v.id === bossConfig.id) || enemySpecies.variants[6]!;
-    
-    enemies.push({
-      id: `boss-${bossConfig.pattern}`,
-      name: `${bossConfig.label} (BOSS)`,
-      x: Math.floor((BOARD_WIDTH - 6) / 2),
-      y: 2,
-      width: bossAsset.sprite.width,
-      height: bossAsset.sprite.height,
-      hp: bossConfig.hp,
-      maxHp: bossConfig.hp,
-      scoreValue: bossConfig.score,
-      variant: bossAsset,
-      shootCooldown: 20,
-      isBoss: true,
-      bossPattern: bossConfig.pattern
-    });
-    setStatus(`${bossConfig.label.toUpperCase()} APPROACHES`, 180);
-
-    const hunterAsset = enemySpecies.variants.find(v => v.id === "enemy-mite-hunter-l2") || enemySpecies.variants[3]!;
-    const escorts = [
-      { x: 10, y: 3 },
-      { x: 22, y: 5 },
-      { x: BOARD_WIDTH - 26, y: 5 },
-      { x: BOARD_WIDTH - 14, y: 3 }
-    ];
-    if (isTurboMode()) {
-      escorts.push(
-        { x: 34, y: 7 },
-        { x: BOARD_WIDTH - 38, y: 7 }
-      );
-    }
-
-    escorts.forEach((esc, idx) => {
-      enemies.push({
-        id: `escort-hunter-${idx}`,
-        name: hunterAsset.name,
-        x: esc.x,
-        y: esc.y,
-        width: hunterAsset.sprite.width,
-        height: hunterAsset.sprite.height,
-        hp: 48,
-        maxHp: 48,
-        scoreValue: 250,
-        variant: hunterAsset,
-        shootCooldown: Math.floor(Math.random() * 60) + 40
-      });
-    });
-    enemyBaseMoveCooldown = isTurboMode() ? 10 : 15;
+    spawnClassicFormationWave(waveNum, spec);
   }
 
+  enemyBaseMoveCooldown = spec.moveCooldown;
+  waveStartEnemyCount = Math.max(1, enemies.length);
   applyCampaignDifficultyToWave();
-}
-
-function createComWingmate(ship: PlayerShip): ComWingmate {
-  const leveledShip = buildLeveledShip(ship, playerLevel);
-  const playerWidth = activeShip.variant.sprite.width;
-  const comWidth = leveledShip.variant.sprite.width;
-  const rightSideX = playerX + playerWidth + 10;
-  const leftSideX = playerX - comWidth - 10;
-  const preferredX = rightSideX + comWidth < BOARD_WIDTH - 1 ? rightSideX : leftSideX;
-
-  return {
-    ship: leveledShip,
-    x: clampShipX(preferredX, comWidth),
-    hp: leveledShip.hp,
-    maxHp: leveledShip.hp,
-    shield: 0,
-    maxShield: leveledShip.shield,
-    shootCooldown: Math.max(8, Math.floor(leveledShip.cooldown * 1.5)),
-    shieldPowerTicks: 0,
-    level: playerLevel,
-    destroyed: false
-  };
 }
 
 // Start Game with Selected Ship
@@ -1165,21 +1068,12 @@ function startGame(ship: PlayerShip, options: StartGameOptions = {}) {
   playerLevel = 1;
   upgradePoints = 0;
   shieldPowerTicks = 0;
-  cloakPowerTicks = 0;
   turboSpecialCharge = isTurboMode() ? TURBO_SPECIAL_MAX_CHARGE : 0;
   playerShield = 0;
-  comWingmate = null;
   applyShipLevel(false);
-  activeComShip = options.comShip ? { ...options.comShip } : null;
-  if (activeComShip) {
-    const pairWidth = activeShip.variant.sprite.width + activeComShip.variant.sprite.width + 12;
-    playerX = Math.floor((BOARD_WIDTH - pairWidth) / 2);
-  } else {
-    playerX = Math.floor(BOARD_WIDTH / 2) - Math.floor(activeShip.variant.sprite.width / 2);
-  }
+  playerX = Math.floor(BOARD_WIDTH / 2) - Math.floor(activeShip.variant.sprite.width / 2);
   playerX = clampShipX(playerX, activeShip.variant.sprite.width);
   playerY = clampShipY(getPlayerHomeY(activeShip.variant.sprite.height), activeShip.variant.sprite.height);
-  comWingmate = activeComShip ? createComWingmate(activeComShip) : null;
   playerShootCooldown = 0;
   shotsFired = 0;
   shotsHit = 0;
@@ -1203,15 +1097,25 @@ function startGame(ship: PlayerShip, options: StartGameOptions = {}) {
   turboRouteX = 0;
   turboBossDestroyed = false;
   enemyStepCount = 0;
+  playerVX = 0;
+  playerVY = 0;
+  heldMoveX = 0;
+  heldMoveY = 0;
+  heldMoveTicks = 0;
+  autofireTicks = 0;
+  playerInvulnTicks = 0;
+  combo = 0;
+  comboTicks = 0;
+  waveBreakTicks = 0;
+  formationDrop = 0;
+  classicWaveSpec = null;
   gameOverReason = "SHIP DESTROYED";
   setStatus(
     isTurboMode()
       ? `${campaignLoop > 1 ? `LOOP ${campaignLoop} ` : ""}TURBO DRIVE ARMED`
       : campaignLoop > 1
       ? `LOOP ${campaignLoop} THREAT LEVEL ${Math.round(getDifficultyMultiplier() * 100)}%`
-      : activeComShip
-        ? "PLAYER-01 + COM-02 READY"
-        : "PLAYER-01 READY",
+      : "PLAYER-01 READY",
     140
   );
   
@@ -1531,6 +1435,18 @@ function fireFriendlyShip(ship: PlayerShip, level: number, shipX: number, shipY:
     }
   }
 
+  // Spread stat (from wings, fork noses, mortar modules) widens the volley
+  // beyond the class pattern with cheap angled shots.
+  const spreadStat = ship.variant.stats?.spread ?? 1;
+  if (spreadStat >= 3) {
+    fire(leftMuzzleX, shipY - 1, -0.3, -0.95, "·", theme.white, baseDamage * 0.4);
+    fire(rightMuzzleX, shipY - 1, 0.3, -0.95, "·", theme.white, baseDamage * 0.4);
+  }
+  if (spreadStat >= 5) {
+    fire(leftMuzzleX, shipY, -0.55, -0.8, "·", theme.white, baseDamage * 0.3);
+    fire(rightMuzzleX, shipY, 0.55, -0.8, "·", theme.white, baseDamage * 0.3);
+  }
+
   if (isTurboMode()) {
     fire(muzzleX, shipY - 2, 0, -1.35, "·", theme.white, baseDamage * 0.18);
   }
@@ -1546,23 +1462,15 @@ function playerShoot() {
   if (isTurboMode()) shakeIntensity = Math.max(shakeIntensity, 1.2);
 }
 
-function comShoot() {
-  if (!comWingmate || comWingmate.destroyed || comWingmate.shootCooldown > 0) return;
-  comWingmate.shootCooldown = Math.max(7, Math.floor(comWingmate.ship.cooldown * 1.45));
-  shotsFired += fireFriendlyShip(comWingmate.ship, comWingmate.level, comWingmate.x, playerY, 0.72);
-}
-
 function spawnCollectible(kind: CollectibleKind) {
   const bonusColors = [theme.amber, theme.cyan, theme.purple, theme.lime];
   const color = kind === "star"
     ? theme.white
     : kind === "shield"
       ? theme.blue
-      : kind === "cloak"
-        ? theme.purple
-        : kind === "cache"
-          ? theme.lime
-          : bonusColors[Math.floor(Math.random() * bonusColors.length)]!;
+      : kind === "cache"
+        ? theme.lime
+        : bonusColors[Math.floor(Math.random() * bonusColors.length)]!;
   const margin = kind === "star" ? 2 : 3;
 
   collectibles.push({
@@ -1570,8 +1478,8 @@ function spawnCollectible(kind: CollectibleKind) {
     kind,
     x: margin + Math.floor(Math.random() * Math.max(1, BOARD_WIDTH - margin * 2)),
     y: 0,
-    vy: kind === "bonus" ? 0.28 : kind === "cloak" || kind === "cache" ? 0.2 : 0.22,
-    char: kind === "star" ? "*" : kind === "shield" ? "◆" : kind === "cloak" ? "◌" : kind === "cache" ? "◈" : "✦",
+    vy: kind === "bonus" ? 0.28 : kind === "cache" ? 0.2 : 0.22,
+    char: kind === "star" ? "*" : kind === "shield" ? "◆" : kind === "cache" ? "◈" : "✦",
     color,
     value: kind === "star" ? 25 : kind === "bonus" ? 150 : kind === "cache" ? 320 : 0
   });
@@ -1581,38 +1489,32 @@ function maybeSpawnCollectible() {
   if (tick % (isTurboMode() ? 26 : 42) === 0) spawnCollectible("star");
   if (tick % (isTurboMode() ? 150 : 240) === 0) spawnCollectible("bonus");
   if (tick % (isTurboMode() ? 300 : 420) === 0) spawnCollectible("shield");
-  if (tick % (isTurboMode() ? 460 : 620) === 0) spawnCollectible("cloak");
   if (isTurboMode() && tick % 560 === 0) spawnCollectible("cache");
 }
 
-function collectPickup(pickup: Collectible, collector: PlayerSelectionSlot = "p1") {
+function collectPickup(pickup: Collectible) {
   if (pickup.kind === "shield") {
-    if (collector === "com") activateComShield();
-    else activateShield();
+    activateShield();
     score += 500;
     return;
   }
-  if (pickup.kind === "cloak") {
-    if (collector === "p1") activateCloak();
-    score += 650;
-    return;
-  }
+  // Affinity boosts harvested value alongside the magnet pull.
+  const gain = Math.round(pickup.value * (1 + getPowerUpAffinity() * 0.05));
   if (pickup.kind === "cache") {
-    score += pickup.value * 14;
-    addUpgradePoints(pickup.value);
+    score += gain * 14;
+    addUpgradePoints(gain);
     if (isTurboMode() && wave < 3) {
       turboGateDistance = Math.max(0, turboGateDistance - 90);
       turboRouteX *= 0.72;
     }
-    setStatus(`${collector === "com" ? "COM " : ""}LOOT CACHE +${pickup.value}`, 100);
+    setStatus(`LOOT CACHE +${gain}`, 100);
     spawnExplosion(pickup.x, pickup.y, pickup.color, 22);
     return;
   }
 
-  score += pickup.value * (pickup.kind === "bonus" ? 12 : 8);
-  addUpgradePoints(pickup.value);
-  const collectorLabel = collector === "com" ? "COM " : "";
-  setStatus(pickup.kind === "bonus" ? `${collectorLabel}BONUS STAR +${pickup.value}` : `${collectorLabel}STAR +${pickup.value}`, 70);
+  score += gain * (pickup.kind === "bonus" ? 12 : 8);
+  addUpgradePoints(gain);
+  setStatus(pickup.kind === "bonus" ? `BONUS STAR +${gain}` : `STAR +${gain}`, 70);
   spawnExplosion(pickup.x, pickup.y, pickup.color, pickup.kind === "bonus" ? 16 : 8);
 }
 
@@ -1629,31 +1531,40 @@ function pickupOverlapsShip(pickup: Collectible, shipX: number, shipY: number, s
   );
 }
 
+function getPowerUpAffinity(): number {
+  return activeShip.variant.stats?.powerUpAffinity ?? 0;
+}
+
 function updateCollectibles() {
   maybeSpawnCollectible();
   const pWidth = activeShip.variant.sprite.width;
   const pHeight = activeShip.variant.sprite.height;
 
+  // powerUpAffinity acts as a tractor field: higher affinity pulls pickups
+  // toward the ship from farther away.
+  const magnetRadius = 3 + getPowerUpAffinity() * 0.7;
+  const magnetX = playerX + pWidth / 2;
+  const magnetY = playerY + pHeight / 2;
   collectibles.forEach((pickup) => {
-    pickup.y += pickup.vy;
+    const dx = magnetX - pickup.x;
+    const dy = magnetY - pickup.y;
+    const dist = Math.hypot(dx, dy);
+    if (dist > 0.5 && dist < magnetRadius) {
+      const pull = 0.5 + getPowerUpAffinity() * 0.02;
+      pickup.x += (dx / dist) * pull;
+      pickup.y += (dy / dist) * pull;
+    } else {
+      pickup.y += pickup.vy;
+    }
   });
 
   const remaining: Collectible[] = [];
   for (const pickup of collectibles) {
     const pickupRadius = pickup.kind === "star" ? 0 : 1;
     const isCollected = pickupOverlapsShip(pickup, playerX, playerY, pWidth, pHeight);
-    const isComCollected = !!comWingmate && !comWingmate.destroyed && pickupOverlapsShip(
-      pickup,
-      comWingmate.x,
-      playerY,
-      comWingmate.ship.variant.sprite.width,
-      comWingmate.ship.variant.sprite.height
-    );
 
     if (isCollected) {
       collectPickup(pickup);
-    } else if (isComCollected) {
-      collectPickup(pickup, "com");
     } else if (pickup.y - pickupRadius < BOARD_HEIGHT) {
       remaining.push(pickup);
     }
@@ -1661,18 +1572,8 @@ function updateCollectibles() {
   collectibles = remaining;
 }
 
-function getClosestFriendlyCenterX(fromX: number): number {
-  const targets = cloakPowerTicks > 0
-    ? [Math.floor(BOARD_WIDTH / 2) + Math.sin(tick / 13) * BOARD_WIDTH * 0.25]
-    : [playerX + activeShip.variant.sprite.width / 2];
-
-  if (comWingmate && !comWingmate.destroyed) {
-    targets.push(comWingmate.x + comWingmate.ship.variant.sprite.width / 2);
-  }
-
-  return targets.reduce((closest, candidate) =>
-    Math.abs(candidate - fromX) < Math.abs(closest - fromX) ? candidate : closest
-  );
+function getClosestFriendlyCenterX(_fromX: number): number {
+  return playerX + activeShip.variant.sprite.width / 2;
 }
 
 function fireEnemy(enemy: Enemy) {
@@ -1684,7 +1585,15 @@ function fireEnemy(enemy: Enemy) {
   };
 
   if (!enemy.isBoss) {
-    pushEnemyBullet(centerX, fromY, 0, 0.5, "v", 10);
+    // Later waves teach grunts to lead their shots toward the player.
+    const aimChance = !isTurboMode() ? classicWaveSpec?.aimChance ?? 0 : 0;
+    if (Math.random() < aimChance) {
+      const playerCenter = getClosestFriendlyCenterX(centerX);
+      const aim = Math.max(-0.4, Math.min(0.4, (playerCenter - centerX) / 26));
+      pushEnemyBullet(centerX, fromY, aim, 0.58, "◦", 12);
+    } else {
+      pushEnemyBullet(centerX, fromY, 0, 0.5, "v", 10);
+    }
     return;
   }
 
@@ -1731,86 +1640,15 @@ function fireEnemy(enemy: Enemy) {
   setStatus("LEVIATHAN LOCK", 55);
 }
 
-function getComTargetEnemy(): Enemy | null {
-  if (!comWingmate || enemies.length === 0) return null;
-  const comCenter = comWingmate.x + comWingmate.ship.variant.sprite.width / 2;
-  return enemies.reduce((best, enemy) => {
-    const enemyCenter = enemy.x + enemy.width / 2;
-    const bestCenter = best.x + best.width / 2;
-    const enemyScore = Math.abs(enemyCenter - comCenter) - enemy.y * 0.25;
-    const bestScore = Math.abs(bestCenter - comCenter) - best.y * 0.25;
-    return enemyScore < bestScore ? enemy : best;
-  });
-}
-
-function getIncomingThreatForCom(): Bullet | null {
-  if (!comWingmate) return null;
-  const comCenter = comWingmate.x + comWingmate.ship.variant.sprite.width / 2;
-  const comY = playerY;
-  let closest: Bullet | null = null;
-
-  for (const bullet of bullets) {
-    if (!bullet.isEnemy || bullet.vy <= 0 || bullet.y < comY - 9) continue;
-    if (Math.abs(bullet.x - comCenter) > 4) continue;
-    if (!closest || bullet.y > closest.y) closest = bullet;
-  }
-
-  return closest;
-}
-
-function updateComWingmate() {
-  if (!comWingmate || comWingmate.destroyed) return;
-
-  if (comWingmate.level !== playerLevel) syncComWingmateLevel();
-  if (comWingmate.shootCooldown > 0) comWingmate.shootCooldown--;
-  if (comWingmate.shieldPowerTicks > 0) {
-    comWingmate.shieldPowerTicks--;
-    if (comWingmate.shieldPowerTicks === 0) {
-      comWingmate.shield = 0;
-      setStatus("COM SHIELD DOWN", 70);
-    }
-  }
-
-  const comWidth = comWingmate.ship.variant.sprite.width;
-  const comCenter = comWingmate.x + comWidth / 2;
-  const targetEnemy = getComTargetEnemy();
-  const incomingThreat = getIncomingThreatForCom();
-  let targetX = comWingmate.x;
-
-  if (incomingThreat) {
-    const dodgeDirection = incomingThreat.x < comCenter ? 1 : -1;
-    targetX = comWingmate.x + dodgeDirection * 10;
-  } else if (targetEnemy) {
-    targetX = targetEnemy.x + targetEnemy.width / 2 - comWidth / 2;
-  }
-
-  const playerCenter = playerX + activeShip.variant.sprite.width / 2;
-  if (Math.abs(comCenter - playerCenter) < 6) {
-    targetX += comCenter < playerCenter ? -5 : 5;
-  }
-
-  const delta = targetX - comWingmate.x;
-  if (Math.abs(delta) > 0.35) {
-    const direction = delta > 0 ? 1 : -1;
-    const step = Math.min(Math.abs(delta), Math.max(0.6, comWingmate.ship.speed * 0.55));
-    comWingmate.x = clampShipX(comWingmate.x + direction * step, comWidth);
-  }
-
-  if (!targetEnemy || incomingThreat) return;
-
-  const updatedCenter = comWingmate.x + comWidth / 2;
-  const enemyCenter = targetEnemy.x + targetEnemy.width / 2;
-  const firingWindow = Math.max(4, targetEnemy.width / 2 + 2);
-  if (Math.abs(updatedCenter - enemyCenter) <= firingWindow) {
-    comShoot();
-  }
-}
-
 function rectsOverlap(ax: number, ay: number, aw: number, ah: number, bx: number, by: number, bw: number, bh: number): boolean {
   return ax < bx + bw && ax + aw > bx && ay < by + bh && ay + ah > by;
 }
 
 function applyPlayerDamage(damage: number, x: number, y: number, reason = "SHIP DESTROYED") {
+  if (playerInvulnTicks > 0) return;
+  playerInvulnTicks = 22;
+  combo = 0;
+  comboTicks = 0;
   shakeIntensity = Math.max(shakeIntensity, isTurboMode() ? 2.5 : 4);
   flashTicks = 3;
   spawnExplosion(x, y, theme.red, isTurboMode() ? 14 : 10);
@@ -1841,36 +1679,6 @@ function applyPlayerDamage(damage: number, x: number, y: number, reason = "SHIP 
   }
 }
 
-function applyComDamage(damage: number, x: number, y: number) {
-  if (!comWingmate || comWingmate.destroyed) return;
-  shakeIntensity = Math.max(shakeIntensity, 2);
-  spawnExplosion(x, y, theme.red, 8);
-
-  if (comWingmate.shield > 0) {
-    comWingmate.shield -= damage;
-    if (comWingmate.shield <= 0) {
-      comWingmate.hp += comWingmate.shield;
-      comWingmate.shield = 0;
-      comWingmate.shieldPowerTicks = 0;
-      setStatus("COM SHIELD BROKEN", 80);
-    }
-  } else {
-    comWingmate.hp -= damage;
-  }
-
-  if (comWingmate.hp <= 0) {
-    comWingmate.hp = 0;
-    comWingmate.destroyed = true;
-    setStatus("COM-02 DESTROYED", 120);
-    spawnExplosion(
-      comWingmate.x + comWingmate.ship.variant.sprite.width / 2,
-      playerY + comWingmate.ship.variant.sprite.height / 2,
-      theme.amber,
-      28
-    );
-  }
-}
-
 function clearTurboEnemy(index: number, destroyed: boolean) {
   const enemy = enemies[index];
   if (!enemy) return;
@@ -1882,7 +1690,7 @@ function clearTurboEnemy(index: number, destroyed: boolean) {
   if (enemy.isBoss) turboBossDestroyed = true;
 
   if (!destroyed) return;
-  score += enemy.scoreValue;
+  addKillScore(enemy.scoreValue);
   enemiesDestroyed++;
   chargeTurboSpecial(enemy.isBoss ? 35 : enemy.turboKind === "asteroid" ? 6 : 10);
   if (wave < 3) {
@@ -1925,13 +1733,6 @@ function pushTurboEnemyBullet(enemy: Enemy) {
 }
 
 function getTurboInterceptTarget(enemy: Enemy, leadTicks = 14): { x: number; y: number } {
-  if (cloakPowerTicks > 0) {
-    return {
-      x: Math.floor(BOARD_WIDTH / 2) + Math.sin((tick + (enemy.phase ?? 0)) / 12) * BOARD_WIDTH * 0.25,
-      y: Math.max(2, getTurboPlayerMinY() - 3)
-    };
-  }
-
   const headingX = getTurboHeadingX();
   const engineFactor = turboEngineTicks > 0 ? 1.7 : 0.8;
   const baseX = playerX + activeShip.variant.sprite.width / 2;
@@ -2071,24 +1872,6 @@ function updateTurboEnemyFriendlyCollisions() {
       if (!enemy.isBoss) clearTurboEnemy(eIdx, false);
       continue;
     }
-
-    if (
-      comWingmate &&
-      !comWingmate.destroyed &&
-      rectsOverlap(
-        enemy.x,
-        enemy.y,
-        enemy.width,
-        enemy.height,
-        comWingmate.x,
-        playerY,
-        comWingmate.ship.variant.sprite.width,
-        comWingmate.ship.variant.sprite.height
-      )
-    ) {
-      applyComDamage(damage, centerX, centerY);
-      if (!enemy.isBoss) clearTurboEnemy(eIdx, false);
-    }
   }
 }
 
@@ -2099,24 +1882,11 @@ function updateTurboEnemyBulletFriendlyCollisions() {
   for (let bIdx = bullets.length - 1; bIdx >= 0; bIdx--) {
     const bullet = bullets[bIdx];
     if (!bullet || !bullet.isEnemy) continue;
-    const hitPlayer = cloakPowerTicks <= 0 && rectsOverlap(bullet.x, bullet.y, 1, 1, playerX, playerY, pWidth, pHeight);
-    const hitCom = !!comWingmate && !comWingmate.destroyed && rectsOverlap(
-      bullet.x,
-      bullet.y,
-      1,
-      1,
-      comWingmate.x,
-      playerY,
-      comWingmate.ship.variant.sprite.width,
-      comWingmate.ship.variant.sprite.height
-    );
+    const hitPlayer = rectsOverlap(bullet.x, bullet.y, 1, 1, playerX, playerY, pWidth, pHeight);
 
     if (hitPlayer) {
       bullets.splice(bIdx, 1);
       applyPlayerDamage(bullet.damage, bullet.x, bullet.y);
-    } else if (hitCom) {
-      bullets.splice(bIdx, 1);
-      applyComDamage(bullet.damage, bullet.x, bullet.y);
     }
   }
 }
@@ -2159,10 +1929,6 @@ function updateGame() {
   if (statusMessageTicks > 0) statusMessageTicks--;
   if (turboEngineTicks > 0) turboEngineTicks--;
   if (isTurboMode()) chargeTurboSpecial(0.28 + playerLevel * 0.03);
-  if (cloakPowerTicks > 0) {
-    cloakPowerTicks--;
-    if (cloakPowerTicks === 0) setStatus("CLOAK FIELD DOWN", 70);
-  }
   if (shieldPowerTicks > 0) {
     shieldPowerTicks--;
     if (shieldPowerTicks === 0) {
@@ -2177,8 +1943,41 @@ function updateGame() {
     playerX = clampShipX(playerX + getTurboHeadingX() * playerSpeed * (engineBoost ? 0.68 : 0.18), pWidth);
     if (engineBoost) playerY = clampShipY(playerY + getTurboHeadingY() * Math.max(0.45, playerSpeed * 0.32), pHeight);
   }
-  updateComWingmate();
   normalizeViewportState();
+
+  if (autofireTicks > 0) {
+    autofireTicks--;
+    playerShoot();
+  }
+  if (playerInvulnTicks > 0) playerInvulnTicks--;
+  if (comboTicks > 0) {
+    comboTicks--;
+    if (comboTicks === 0) combo = 0;
+  }
+
+  if (!isTurboMode()) {
+    const stats = activeShip.variant.stats ?? {};
+    const accel = 0.14 + (stats.turnRate ?? 7) * 0.022;
+    const maxV = Math.max(0.9, playerSpeed);
+    if (heldMoveTicks > 0) {
+      heldMoveTicks--;
+      playerVX += heldMoveX * accel;
+      playerVY += heldMoveY * accel * 0.8;
+    }
+    playerVX = Math.max(-maxV, Math.min(maxV, playerVX)) * 0.86;
+    playerVY = Math.max(-maxV * 0.75, Math.min(maxV * 0.75, playerVY)) * 0.84;
+    if (Math.abs(playerVX) < 0.04) playerVX = 0;
+    if (Math.abs(playerVY) < 0.04) playerVY = 0;
+    if (playerVX !== 0 || playerVY !== 0) {
+      const pW = activeShip.variant.sprite.width;
+      const pH = activeShip.variant.sprite.height;
+      playerX = clampShipX(playerX + playerVX, pW);
+      playerY = clampShipY(playerY + playerVY, pH);
+      playerMotionBank = Math.max(-1, Math.min(1, playerVX / Math.max(0.6, maxV)));
+      playerMotionLift = Math.max(-1, Math.min(1, playerVY / Math.max(0.6, maxV)));
+      playerMotionTicks = Math.max(playerMotionTicks, 2);
+    }
+  }
 
   stars.forEach(star => {
     const turboForwardSpeed = isTurboMode() ? (turboEngineTicks > 0 ? 2.15 : 1.18 + Math.sin(tick / 70) * 0.18) : 1;
@@ -2231,16 +2030,35 @@ function updateGame() {
   }
 
   enemyMoveTimer++;
-  const activeEnemiesCount = enemies.length;
-  const startEnemiesCount = getWaveStartEnemiesCount();
-  const enemyMoveCooldown = Math.max(3, Math.floor(enemyBaseMoveCooldown * (activeEnemiesCount / startEnemiesCount)));
+  const enemyMoveCooldown = Math.max(3, Math.floor(enemyBaseMoveCooldown * (enemies.length / waveStartEnemyCount)));
+
+  // Per-tick motion: entering enemies descend to their formation slot, divers
+  // swoop toward the player with a sine wobble and loop back in from the top.
+  for (const enemy of enemies) {
+    if (enemy.behavior === "diver") {
+      enemy.vy = Math.min(0.85, (enemy.vy ?? 0.3) + 0.012);
+      enemy.phase = (enemy.phase ?? 0) + 0.09;
+      enemy.x = Math.max(1, Math.min(BOARD_WIDTH - enemy.width - 1, enemy.x + (enemy.vx ?? 0) + Math.sin(enemy.phase) * 0.35));
+      enemy.y += enemy.vy;
+      if (enemy.y > BOARD_HEIGHT) {
+        enemy.behavior = "formation";
+        enemy.y = -2;
+        enemy.targetY = (enemy.baseY ?? 1) + formationDrop;
+        enemy.vx = 0;
+        enemy.vy = 0;
+      }
+    } else if (enemy.targetY !== undefined && enemy.y < enemy.targetY) {
+      enemy.y = Math.min(enemy.targetY, enemy.y + 0.55);
+    }
+  }
 
   if (enemyMoveTimer >= enemyMoveCooldown) {
     enemyMoveTimer = 0;
     enemyStepCount++;
-    
+
+    const marchers = enemies.filter((enemy) => enemy.behavior !== "diver");
     let hitEdge = false;
-    for (const enemy of enemies) {
+    for (const enemy of marchers) {
       const nextX = enemy.x + enemyDirection;
       if (nextX < 1 || nextX + enemy.width > BOARD_WIDTH - 1) {
         hitEdge = true;
@@ -2250,17 +2068,38 @@ function updateGame() {
 
     if (hitEdge) {
       enemyDirection *= -1;
-      for (const enemy of enemies) {
+      formationDrop += 1;
+      for (const enemy of marchers) {
         enemy.y += 1;
+        if (enemy.targetY !== undefined) enemy.targetY += 1;
       }
     } else {
-      for (const enemy of enemies) {
+      for (const enemy of marchers) {
         enemy.x += enemyDirection;
+      }
+    }
+
+    // Galaga-style peel-off: the lowest settled formation enemies dive.
+    const spec = classicWaveSpec;
+    if (spec && spec.diveChance > 0 && Math.random() < spec.diveChance) {
+      const eligible = enemies.filter(
+        (enemy) => enemy.behavior === "formation" && !enemy.isBoss && (enemy.targetY === undefined || enemy.y >= enemy.targetY)
+      );
+      if (eligible.length > 0) {
+        const lowestY = Math.max(...eligible.map((enemy) => enemy.y));
+        const lowest = eligible.filter((enemy) => enemy.y >= lowestY - 1);
+        const diver = lowest[Math.floor(Math.random() * lowest.length)]!;
+        const playerCenter = playerX + activeShip.variant.sprite.width / 2;
+        diver.behavior = "diver";
+        diver.baseY = diver.baseY ?? Math.round(diver.y - formationDrop);
+        diver.vx = Math.max(-0.4, Math.min(0.4, (playerCenter - (diver.x + diver.width / 2)) / 40));
+        diver.vy = 0.3;
+        diver.phase = Math.random() * Math.PI * 2;
       }
     }
   }
 
-  if (enemies.some(e => e.y + e.height >= getInvasionLineY())) {
+  if (enemies.some(e => e.behavior !== "diver" && e.y + e.height >= getInvasionLineY())) {
     screen = "gameover";
     gameOverReason = "INVASION LINE BREACHED";
     if (score > highScore) highScore = score;
@@ -2269,6 +2108,7 @@ function updateGame() {
   }
 
   enemies.forEach(enemy => {
+    if (enemy.y < 0) return; // still flying in
     if (enemy.shootCooldown > 0) {
       enemy.shootCooldown--;
     } else {
@@ -2281,36 +2121,38 @@ function updateGame() {
   });
 
   // Collision Bullet vs Enemy
-  bullets.forEach((bullet, bIdx) => {
-    if (bullet.isEnemy) return;
+  for (let bIdx = bullets.length - 1; bIdx >= 0; bIdx--) {
+    const bullet = bullets[bIdx]!;
+    if (bullet.isEnemy) continue;
 
-    enemies.forEach((enemy, eIdx) => {
-      const bX = Math.floor(bullet.x);
-      const bY = Math.floor(bullet.y);
-      if (
-        bX >= enemy.x &&
-        bX < enemy.x + enemy.width &&
-        bY >= enemy.y &&
-        bY < enemy.y + enemy.height
-      ) {
-        enemy.hp -= bullet.damage;
-        shotsHit++;
-        bullets.splice(bIdx, 1);
-        
-        const enemyColor = toneColors[enemy.variant.tone as keyof typeof toneColors] || theme.red;
-        spawnExplosion(bullet.x, bullet.y, enemyColor, 4);
+    const bX = Math.floor(bullet.x);
+    const bY = Math.floor(bullet.y);
+    const eIdx = enemies.findIndex(
+      (enemy) =>
+        bX >= Math.floor(enemy.x) &&
+        bX < Math.floor(enemy.x) + enemy.width &&
+        bY >= Math.floor(enemy.y) &&
+        bY < Math.floor(enemy.y) + enemy.height
+    );
+    if (eIdx < 0) continue;
 
-        if (enemy.hp <= 0) {
-          enemies.splice(eIdx, 1);
-          score += enemy.scoreValue;
-          enemiesDestroyed++;
-          chargeTurboSpecial(enemy.isBoss ? 24 : 8);
-          shakeIntensity = Math.min(3, shakeIntensity + 1);
-          spawnExplosion(enemy.x + enemy.width / 2, enemy.y + enemy.height / 2, enemyColor, 12);
-        }
-      }
-    });
-  });
+    const enemy = enemies[eIdx]!;
+    enemy.hp -= bullet.damage;
+    shotsHit++;
+    bullets.splice(bIdx, 1);
+
+    const enemyColor = toneColors[enemy.variant.tone as keyof typeof toneColors] || theme.red;
+    spawnExplosion(bullet.x, bullet.y, enemyColor, 4);
+
+    if (enemy.hp <= 0) {
+      enemies.splice(eIdx, 1);
+      addKillScore(enemy.scoreValue);
+      enemiesDestroyed++;
+      chargeTurboSpecial(enemy.isBoss ? 24 : 8);
+      shakeIntensity = Math.min(3, shakeIntensity + 1);
+      spawnExplosion(enemy.x + enemy.width / 2, enemy.y + enemy.height / 2, enemyColor, 12);
+    }
+  }
 
   // Collision Bullet vs Friendly Ships
   const pWidth = activeShip.variant.sprite.width;
@@ -2322,104 +2164,83 @@ function updateGame() {
 
     const bX = Math.floor(bullet.x);
     const bY = Math.floor(bullet.y);
-    const hitPlayer = cloakPowerTicks <= 0 &&
+    const hitPlayer =
       bX >= playerX &&
       bX < playerX + pWidth &&
       bY >= playerY &&
       bY < playerY + pHeight;
-    const hitCom = !!comWingmate && !comWingmate.destroyed &&
-      bX >= comWingmate.x &&
-      bX < comWingmate.x + comWingmate.ship.variant.sprite.width &&
-      bY >= playerY &&
-      bY < playerY + comWingmate.ship.variant.sprite.height;
 
     if (hitPlayer) {
       bullets.splice(bIdx, 1);
-      shakeIntensity = 4;
-      flashTicks = 3;
-
-      spawnExplosion(bullet.x, bullet.y, theme.red, 10);
-
-      if (playerShield > 0) {
-        playerShield -= bullet.damage;
-        if (playerShield <= 0) {
-          playerHp += playerShield;
-          playerShield = 0;
-          shieldPowerTicks = 0;
-          setStatus("SHIELD BROKEN", 80);
-        }
-      } else {
-        playerHp -= bullet.damage;
-      }
-
-      if (playerHp <= 0) {
-        playerHp = 0;
-        screen = "gameover";
-        gameOverReason = "SHIP DESTROYED";
-        if (score > highScore) highScore = score;
-        spawnExplosion(playerX + pWidth / 2, playerY + pHeight / 2, theme.red, 35);
-      }
-      continue;
+      applyPlayerDamage(bullet.damage, bullet.x, bullet.y);
+      if (screen !== "playing") return;
     }
+  }
 
-    if (hitCom && comWingmate) {
-      bullets.splice(bIdx, 1);
-      shakeIntensity = Math.max(shakeIntensity, 2);
-      spawnExplosion(bullet.x, bullet.y, theme.red, 8);
+  // Collision Enemy vs Player: diving or descending enemies can ram the ship.
+  for (let eIdx = enemies.length - 1; eIdx >= 0; eIdx--) {
+    const enemy = enemies[eIdx]!;
+    if (enemy.y < 0) continue;
+    if (!rectsOverlap(playerX, playerY, pWidth, pHeight, enemy.x, enemy.y, enemy.width, enemy.height)) continue;
 
-      if (comWingmate.shield > 0) {
-        comWingmate.shield -= bullet.damage;
-        if (comWingmate.shield <= 0) {
-          comWingmate.hp += comWingmate.shield;
-          comWingmate.shield = 0;
-          comWingmate.shieldPowerTicks = 0;
-          setStatus("COM SHIELD BROKEN", 80);
-        }
-      } else {
-        comWingmate.hp -= bullet.damage;
-      }
-
-      if (comWingmate.hp <= 0) {
-        comWingmate.hp = 0;
-        comWingmate.destroyed = true;
-        setStatus("COM-02 DESTROYED", 120);
-        spawnExplosion(
-          comWingmate.x + comWingmate.ship.variant.sprite.width / 2,
-          playerY + comWingmate.ship.variant.sprite.height / 2,
-          theme.amber,
-          28
-        );
-      }
+    const enemyColor = toneColors[enemy.variant.tone as keyof typeof toneColors] || theme.red;
+    if (!enemy.isBoss) {
+      enemies.splice(eIdx, 1);
+      score += Math.round(enemy.scoreValue / 2);
+      enemiesDestroyed++;
+      spawnExplosion(enemy.x + enemy.width / 2, enemy.y + enemy.height / 2, enemyColor, 14);
     }
+    applyPlayerDamage(enemy.isBoss ? 26 : 16, enemy.x + enemy.width / 2, enemy.y + enemy.height / 2, "RAMMED BY HOSTILE");
+    if (screen !== "playing") return;
   }
 
   if (enemies.length === 0) {
-    if (wave < 3) {
-      wave++;
-      startWave(wave);
-      score += 1000 * (wave - 1);
-      playerHp = Math.min(playerMaxHp, playerHp + 20);
-    } else {
+    if (waveBreakTicks > 0) {
+      waveBreakTicks--;
+      if (waveBreakTicks === 0) {
+        wave++;
+        startWave(wave);
+      }
+      return;
+    }
+    if (wave >= CLASSIC_FINAL_WAVE) {
       score += 5000;
       if (score > highScore) highScore = score;
       screen = "victory";
+      return;
     }
+    // Wave cleared: pay an accuracy-scaled bonus, breathe, then escalate.
+    const accuracy = shotsFired > 0 ? shotsHit / shotsFired : 0;
+    const clearBonus = 400 + wave * 150 + Math.round(accuracy * 600);
+    score += clearBonus;
+    playerHp = Math.min(playerMaxHp, playerHp + 20);
+    addUpgradePoints(90 + wave * 25);
+    setStatus(`WAVE ${wave} CLEARED  +${clearBonus}`, 80);
+    waveBreakTicks = 70;
   }
 }
 
-// Moves player within mode-specific limits.
+// Moves player within mode-specific limits. Turbo keeps direct heading-based
+// movement; classic feeds a thrust latch so velocity physics take over and
+// terminal key-repeat reads as continuous flight.
 function movePlayer(offsetX: number, offsetY = 0) {
-  const pWidth = activeShip.variant.sprite.width;
-  const pHeight = activeShip.variant.sprite.height;
-  playerX = clampShipX(playerX + offsetX * playerSpeed, pWidth);
-  playerY = clampShipY(playerY + offsetY * Math.max(1, playerSpeed * 0.7), pHeight);
-  playerMotionBank = Math.max(-1, Math.min(1, offsetX / 2));
-  playerMotionLift = Math.max(-1, Math.min(1, offsetY / 2));
-  playerMotionTicks = 10;
   if (isTurboMode()) {
+    const pWidth = activeShip.variant.sprite.width;
+    const pHeight = activeShip.variant.sprite.height;
+    playerX = clampShipX(playerX + offsetX * playerSpeed, pWidth);
+    playerY = clampShipY(playerY + offsetY * Math.max(1, playerSpeed * 0.7), pHeight);
+    playerMotionBank = Math.max(-1, Math.min(1, offsetX / 2));
+    playerMotionLift = Math.max(-1, Math.min(1, offsetY / 2));
+    playerMotionTicks = 10;
     turboPlayerBank = Math.max(-1, Math.min(1, offsetX / 2));
     turboPlayerLift = Math.max(-1, Math.min(1, offsetY / 2));
+    return;
   }
+  heldMoveX = Math.sign(offsetX);
+  heldMoveY = Math.sign(offsetY);
+  heldMoveTicks = 7;
+  playerVX += Math.sign(offsetX) * 0.3;
+  playerVY += Math.sign(offsetY) * 0.22;
 }
 
 function rotateTurboPlayer(offset: number) {
@@ -2539,21 +2360,6 @@ function drawShipShield(grid: Cell[][], shipX: number, shipY: number, shipWidth:
   if (rightX < BOARD_WIDTH) row[rightX] = { char: tick % 8 < 4 ? ")" : ">", color, bold: true };
 }
 
-function drawCloakField(grid: Cell[][], shipX: number, shipY: number, shipWidth: number, shipHeight: number) {
-  if (cloakPowerTicks <= 0) return;
-  const shimmer = tick % 10 < 5 ? "." : "·";
-  const topY = Math.floor(shipY - 1);
-  const bottomY = Math.floor(shipY + shipHeight);
-  for (let x = Math.floor(shipX - 1); x <= Math.floor(shipX + shipWidth); x++) {
-    if ((x + tick) % 2 === 0) {
-      setBoardCell(grid, x, topY, { char: shimmer, color: theme.purple });
-      setBoardCell(grid, x, bottomY, { char: shimmer, color: theme.purple });
-    }
-  }
-  setBoardCell(grid, shipX - 1, shipY + Math.floor(shipHeight / 2), { char: "(", color: theme.purple, bold: true });
-  setBoardCell(grid, shipX + shipWidth, shipY + Math.floor(shipHeight / 2), { char: ")", color: theme.purple, bold: true });
-}
-
 function drawTurboSpecialEffect(grid: Cell[][], effect: TurboSpecialEffect) {
   const pulse = effect.life % 2 === 0;
 
@@ -2654,31 +2460,9 @@ function drawTurboObjectiveBeacon(grid: Cell[][]) {
 }
 
 function drawTurboEnemy(grid: Cell[][], enemy: Enemy) {
+  // Render the pure-Braille sprite with a per-enemy phase offset so the shared
+  // two-frame idle animation desyncs across the swarm, matching the classic look.
   drawSprite(grid, enemy.x, enemy.y, enemy.variant, tick + (enemy.phase ?? 0));
-  const centerX = Math.floor(enemy.x + enemy.width / 2);
-  const centerY = Math.floor(enemy.y + enemy.height / 2);
-  const color = toneColors[enemy.variant.tone as keyof typeof toneColors] || theme.red;
-
-  if (enemy.turboKind === "asteroid") {
-    const cores = ["O", "0", "@", "*"];
-    const core = cores[Math.abs(Math.floor((enemy.rotation ?? 0) * 2)) % cores.length]!;
-    setBoardCell(grid, centerX, centerY, { char: core, color, bold: true });
-  } else if (enemy.turboKind === "comet") {
-    const tail = (enemy.vx ?? 0) > 0 ? "<" : ">";
-    const tailX = (enemy.vx ?? 0) > 0 ? Math.floor(enemy.x) - 1 : Math.floor(enemy.x + enemy.width);
-    setBoardCell(grid, tailX, Math.floor(enemy.y), { char: tail, color: theme.lime, bold: true });
-  } else if (enemy.turboKind === "mine") {
-    const pulse = tick % 10 < 5 ? "x" : "+";
-    setBoardCell(grid, centerX - 2, centerY, { char: pulse, color, bold: true });
-    setBoardCell(grid, centerX + 2, centerY, { char: pulse, color, bold: true });
-  } else if (enemy.turboKind === "raider" || enemy.turboKind === "rotor") {
-    const bank = Math.sign(enemy.vx ?? 0);
-    if (bank < 0) setBoardCell(grid, Math.floor(enemy.x) - 1, centerY, { char: "\\", color, bold: true });
-    if (bank > 0) setBoardCell(grid, Math.floor(enemy.x + enemy.width), centerY, { char: "/", color, bold: true });
-  } else if (enemy.turboKind === "dreadnought") {
-    const glow = tick % 8 < 4 ? "!" : "|";
-    setBoardCell(grid, centerX, centerY, { char: glow, color: theme.amber, bold: true });
-  }
 }
 
 function drawEnemyDetails(grid: Cell[][], enemy: Enemy) {
@@ -2702,6 +2486,7 @@ function drawEnemyDetails(grid: Cell[][], enemy: Enemy) {
 }
 
 function drawPlayerShip(grid: Cell[][], shipX: number, shipY: number) {
+  if (playerInvulnTicks > 0 && Math.floor(tick / 2) % 2 === 0) return; // damage blink
   const width = activeShip.variant.sprite.width;
   const height = activeShip.variant.sprite.height;
   const bank = getPlayerBankStep();
@@ -2777,22 +2562,8 @@ function renderBoard(): string[] {
   });
 
   const pY = playerY;
-  if (comWingmate && !comWingmate.destroyed) {
-    drawSprite(grid, comWingmate.x, pY, comWingmate.ship.variant, tick);
-    drawShipShield(
-      grid,
-      comWingmate.x,
-      pY,
-      comWingmate.ship.variant.sprite.width,
-      comWingmate.ship.variant.sprite.height,
-      comWingmate.shield,
-      theme.amber
-    );
-  }
-
   drawPlayerShip(grid, playerX, pY);
   drawShipShield(grid, playerX, pY, activeShip.variant.sprite.width, activeShip.variant.sprite.height, playerShield);
-  drawCloakField(grid, playerX, pY, activeShip.variant.sprite.width, activeShip.variant.sprite.height);
 
   bullets.forEach(bullet => {
     drawProjectile(grid, bullet);
@@ -2858,7 +2629,7 @@ function renderMissionResult(result: "gameover" | "victory"): string {
     `${statLabel(label, labelColor)} ${statValue(value, valueWidth)}`;
   const statRows = [
     `${statCell("SCORE", formatNumber(score), theme.green, 8)}   ${statCell("HI", formatNumber(highScore), theme.purple, 8)}`,
-    `${statCell("MODE", selectedGameMode.toUpperCase(), theme.cyan, 8)}   ${statCell("PILOT", activeComShip ? "2P COM" : "1P SOLO", theme.lime, 8)}   ${statCell("COM", activeComShip ? comWingmate && !comWingmate.destroyed ? "ACTIVE" : "LOST" : "NONE", theme.amber, 8)}`,
+    `${statCell("MODE", selectedGameMode.toUpperCase(), theme.cyan, 8)}   ${statCell("PILOT", "1P SOLO", theme.lime, 8)}`,
     `${statCell("LOOP", String(campaignLoop).padStart(2, "0"), theme.amber, 8)}   ${statCell("WAVE", String(wave).padStart(2, "0"), theme.cyan, 8)}`,
     `${statCell("SHIP", `LV ${playerLevel} ${activeShip.weapon}`, theme.lime, 26)}`,
     `${statCell("STARS", String(upgradePoints), theme.amber, 8)}   ${statCell("BUGS", String(enemiesDestroyed), theme.red, 8)}   ${statCell("ACC", `${accuracy}%`, theme.green, 5)}`
@@ -3475,16 +3246,11 @@ function renderViewportFallback(termWidth: number, termHeight: number): string {
 }
 
 function getActiveSelectionIndex(): number {
-  return selectedLoadoutSlot === "com" ? selectedComShipIndex : selectedShipIndex;
+  return selectedShipIndex;
 }
 
 function setActiveSelectionIndex(index: number) {
-  const normalized = (index + playerShips.length) % playerShips.length;
-  if (selectedLoadoutSlot === "com") {
-    selectedComShipIndex = normalized;
-  } else {
-    selectedShipIndex = normalized;
-  }
+  selectedShipIndex = (index + playerShips.length) % playerShips.length;
   builderSectionIndex = 0;
   builderSlotIndex = 0;
 }
@@ -3590,36 +3356,11 @@ function cycleBuilderPreset(offset: number) {
   builderSlotIndex = 0;
 }
 
-function toggleSelectedPlayerCount() {
-  if (selectedPlayerCount === 1) {
-    selectedPlayerCount = 2;
-    selectedLoadoutSlot = "com";
-    if (selectedComShipIndex === selectedShipIndex) {
-      selectedComShipIndex = (selectedShipIndex + 1) % playerShips.length;
-    }
-  } else {
-    selectedPlayerCount = 1;
-    selectedLoadoutSlot = "p1";
-  }
-}
-
-function toggleSelectedLoadoutSlot() {
-  if (selectedPlayerCount === 1) return;
-  selectedLoadoutSlot = selectedLoadoutSlot === "p1" ? "com" : "p1";
-}
-
 function renderSelectionModeLine(width: number): string {
   const gameMode = `${rgb("GAME", isTurboMode() ? theme.amber : theme.cyan, colorEnabled)} ${selectedGameMode.toUpperCase()}`;
-  const mode = selectedPlayerCount === 2
-    ? `${rgb("PILOT", theme.cyan, colorEnabled)} 2P + COM`
-    : `${rgb("PILOT", theme.cyan, colorEnabled)} 1P SOLO`;
-  const editing = selectedPlayerCount === 2
-    ? `${rgb("EDIT", theme.amber, colorEnabled)} ${selectedLoadoutSlot === "com" ? "COM-02" : "P1"}`
-    : `${rgb("EDIT", theme.amber, colorEnabled)} P1`;
+  const mode = `${rgb("PILOT", theme.cyan, colorEnabled)} 1P SOLO`;
   const p1Ship = playerShips[selectedShipIndex]?.name ?? "Unknown";
-  const comShip = selectedPlayerCount === 2 ? `  ${rgb("COM", theme.amber, colorEnabled)} ${playerShips[selectedComShipIndex]?.name ?? "Unknown"}` : "";
-  const loadoutKeys = selectedPlayerCount === 2 ? "  C: MODE  E: SLOT" : "  C: MODE";
-  return fitAnsi(joinAligned(`${gameMode}  ${mode}  ${editing}${rgb(loadoutKeys, theme.muted, colorEnabled)}`, `${rgb("P1", theme.green, colorEnabled)} ${p1Ship}${comShip}`, width, 3), width);
+  return fitAnsi(joinAligned(`${gameMode}  ${mode}`, `${rgb("P1", theme.green, colorEnabled)} ${p1Ship}`, width, 3), width);
 }
 
 function centerFit(text: string, width: number): string {
@@ -3628,15 +3369,11 @@ function centerFit(text: string, width: number): string {
 
 function renderShipSelectCard(ship: PlayerShip, index: number, width: number): string {
   const isP1Selected = index === selectedShipIndex;
-  const isComSelected = selectedPlayerCount === 2 && index === selectedComShipIndex;
-  const isActiveSelection =
-    (selectedLoadoutSlot === "p1" && isP1Selected) ||
-    (selectedLoadoutSlot === "com" && isComSelected);
-  const accent = isActiveSelection ? theme.cyan : isComSelected ? theme.amber : isP1Selected ? theme.green : theme.border;
-  
+  const isActiveSelection = isP1Selected;
+  const accent = isActiveSelection ? theme.cyan : isP1Selected ? theme.green : theme.border;
+
   const titleParts = [
     isP1Selected ? "P1" : "",
-    isComSelected ? "COM" : "",
     isActiveSelection ? "EDITABLE" : ""
   ].filter(Boolean);
 
@@ -3662,7 +3399,7 @@ function renderShipSelectCard(ship: PlayerShip, index: number, width: number): s
   return box(titleParts.length > 0 ? ` ${titleParts.join(" ")} ` : "", rows, {
     width,
     height: 14,
-    borderStyle: isP1Selected || isComSelected ? "arcade" : "single",
+    borderStyle: isP1Selected ? "arcade" : "single",
     accent,
     color: colorEnabled,
     paddingX: 0,
@@ -3693,9 +3430,7 @@ function renderShipSelectScreen(): string {
       bold(
         rgb("SPACE/TAB", theme.cyan, colorEnabled) + rgb(" Customize  ", theme.text, colorEnabled) +
         rgb("A/D", theme.cyan, colorEnabled) + rgb(" Select  ", theme.text, colorEnabled) +
-        rgb("ENTER", theme.green, colorEnabled) + rgb(" Launch  ", theme.text, colorEnabled) +
-        rgb("C", theme.amber, colorEnabled) + rgb(" Mode  ", theme.text, colorEnabled) +
-        rgb("E", theme.amber, colorEnabled) + rgb(" Swap P1/COM", theme.text, colorEnabled),
+        rgb("ENTER", theme.green, colorEnabled) + rgb(" Launch", theme.text, colorEnabled),
         colorEnabled
       ),
       innerWidth
@@ -3768,9 +3503,9 @@ function render() {
     });
 
     const turboControls = isTurboMode() ? "  •  W toward gate / S away  •  Shift+A/D: Rotate  •  E: Engine  •  X: Special" : "";
-    const footerCopy = activeComShip
-      ? `A/D or ◀/▶: Move Starfighter${turboControls}  •  SPACEBAR: Shoot Laser  •  COM-02: Auto  •  Q: Abort`
-      : `A/D or ◀/▶: Move Starfighter${turboControls}  •  SPACEBAR: Shoot Laser  •  Q: Abort`;
+    const footerCopy = isTurboMode()
+      ? `A/D or ◀/▶: Move Starfighter${turboControls}  •  SPACEBAR: Shoot Laser  •  Q: Abort`
+      : `A/D: Strafe  •  W/S: Thrust  •  SPACEBAR: Fire (hold)  •  WAVE ${Math.min(wave, CLASSIC_FINAL_WAVE)}/${CLASSIC_FINAL_WAVE}  •  Q: Abort`;
     const footerText = dim(rgb(footerCopy, theme.muted, colorEnabled), colorEnabled);
     const footerLine = fitAnsi(footerText, PLAYFIELD_WIDTH);
 
@@ -3827,13 +3562,12 @@ function cleanupAndExit() {
 
 // Restart action
 function restartGame(result: "gameover" | "victory") {
-  const comShip = activeComShip ?? (selectedPlayerCount === 2 ? playerShips[selectedComShipIndex]! : null);
   if (result === "victory") {
-    startGame(activeShip, { preserveScore: true, advanceDifficulty: true, comShip });
+    startGame(activeShip, { preserveScore: true, advanceDifficulty: true });
     return;
   }
 
-  startGame(activeShip, { comShip });
+  startGame(activeShip);
 }
 
 // Input parsing dispatcher
@@ -3900,12 +3634,6 @@ const handleInput = (key: Buffer | string) => {
     } else if (startScreenMode === "customize" && (keyStr === "s" || keyStr === "\u001b[B")) {
       moveBuilderSection(1);
       render();
-    } else if (keyStr === "c" || keyStr === "C") {
-      toggleSelectedPlayerCount();
-      render();
-    } else if (keyStr === "e" || keyStr === "E") {
-      toggleSelectedLoadoutSlot();
-      render();
     } else if (startScreenMode === "customize" && (keyStr === "n" || keyStr === "N")) {
       cycleBuilderPreset(1);
       render();
@@ -3919,9 +3647,7 @@ const handleInput = (key: Buffer | string) => {
       startScreenMode = startScreenMode === "select" ? "customize" : "select";
       render();
     } else if (keyStr === "\r" || keyStr === "\n") {
-      startGame(playerShips[selectedShipIndex]!, {
-        comShip: selectedPlayerCount === 2 ? playerShips[selectedComShipIndex]! : null
-      });
+      startGame(playerShips[selectedShipIndex]!);
       render();
     }
   } else if (screen === "playing") {
@@ -3949,12 +3675,10 @@ const handleInput = (key: Buffer | string) => {
       moveX = 2;
     }
 
-    if (isTurboMode()) {
-      if (keyStr.includes("w") || keyStr.includes("\u001b[A")) {
-        moveY = -2;
-      } else if (keyStr.includes("s") || keyStr.includes("\u001b[B")) {
-        moveY = 2;
-      }
+    if (keyStr.includes("w") || keyStr.includes("\u001b[A")) {
+      moveY = -2;
+    } else if (keyStr.includes("s") || keyStr.includes("\u001b[B")) {
+      moveY = 2;
     }
 
     if (moveX !== 0 || moveY !== 0) {
@@ -3965,6 +3689,7 @@ const handleInput = (key: Buffer | string) => {
     // 3. Actions: Shoot, Special, Engine Boost
     if (keyStr.includes(" ")) {
       playerShoot();
+      autofireTicks = 9; // keeps firing between terminal key-repeat events
       handled = true;
     }
     if (keyStr.includes("x") || keyStr.includes("X")) {
@@ -3973,6 +3698,11 @@ const handleInput = (key: Buffer | string) => {
     }
     if (isTurboMode() && (keyStr.includes("e") || keyStr.includes("E"))) {
       triggerTurboEngine();
+      handled = true;
+    }
+    // Debug-only wave skip for development and automated playtesting.
+    if (process.env.INVADER_DEBUG === "1" && keyStr.includes("k")) {
+      enemies = [];
       handled = true;
     }
 

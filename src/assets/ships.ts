@@ -1,4 +1,211 @@
-import type { ShipFamily } from "./types.js";
+import { brailleFrame } from "./braille.js";
+import type { ShipFamily, SpriteFrame } from "./types.js";
+
+// Ship hulls are authored as dot-matrix pixel art (2x4 dots per Braille cell)
+// and compiled into SpriteFrames. Solid masses read as armor at terminal
+// scale; single-dot gaps mark cockpits and engine channels. The second idle
+// frame swaps only the trailing exhaust rows for a thruster flicker.
+function shipFrames(art: string[], exhaust: string[]): { sprite: SpriteFrame; idle: [SpriteFrame, SpriteFrame] } {
+  const base = brailleFrame(art);
+  const flicker = brailleFrame([...art.slice(0, art.length - exhaust.length), ...exhaust]);
+  return { sprite: base, idle: [base, flicker] };
+}
+
+// BAR — long needle fuselage with a straight wing band and twin engines.
+const barL1 = shipFrames(
+  [
+    "...##...",
+    "..####..",
+    "..####..",
+    "########",
+    "########",
+    "#..##..#",
+    "...##...",
+    "..#..#.."
+  ],
+  ["...##..."]
+);
+const barL2 = shipFrames(
+  [
+    "...##...",
+    "..####..",
+    "..#..#..",
+    "..####..",
+    ".######.",
+    "########",
+    "#..##..#",
+    "..####..",
+    "..####..",
+    ".##..##.",
+    ".##..##.",
+    "..#..#.."
+  ],
+  ["...##..."]
+);
+const barL3 = shipFrames(
+  [
+    "....##....",
+    "##..##..##",
+    "##.####.##",
+    "##.####.##",
+    "##########",
+    "##########",
+    ".########.",
+    "..######..",
+    "..##..##..",
+    "..##..##..",
+    ".##....##.",
+    "..#....#.."
+  ],
+  [".#......#."]
+);
+
+// DELTA — clean arrowhead taper with a center engine channel.
+const deltaL1 = shipFrames(
+  [
+    "...##...",
+    "...##...",
+    "..####..",
+    "..####..",
+    ".######.",
+    "########",
+    "########",
+    "...##..."
+  ],
+  ["..#..#.."]
+);
+const deltaL2 = shipFrames(
+  [
+    "...##...",
+    "...##...",
+    "..####..",
+    "..#..#..",
+    "..####..",
+    ".######.",
+    ".######.",
+    "########",
+    "###..###",
+    "##....##",
+    "..####..",
+    "...##..."
+  ],
+  ["..#..#.."]
+);
+const deltaL3 = shipFrames(
+  [
+    "....##....",
+    "....##....",
+    "...####...",
+    "...#..#...",
+    "..######..",
+    "..######..",
+    ".########.",
+    "##########",
+    "###.##.###",
+    "##..##..##",
+    "...####...",
+    "....##...."
+  ],
+  ["...#..#..."]
+);
+
+// RING — saucer hull with a domed cockpit and a lower drive column.
+const ringL1 = shipFrames(
+  [
+    "..####..",
+    ".##..##.",
+    "########",
+    "########",
+    ".######.",
+    "..####..",
+    "...##...",
+    "...##..."
+  ],
+  ["..#..#.."]
+);
+const ringL2 = shipFrames(
+  [
+    "...##...",
+    "..####..",
+    ".######.",
+    "###..###",
+    "###..###",
+    "########",
+    ".######.",
+    "..####..",
+    "...##...",
+    "..#..#..",
+    "..####..",
+    "...##..."
+  ],
+  ["..#..#.."]
+);
+const ringL3 = shipFrames(
+  [
+    "...####...",
+    "..######..",
+    ".########.",
+    "###....###",
+    "###....###",
+    "##########",
+    ".########.",
+    "..######..",
+    "...####...",
+    "..##..##..",
+    "..##..##..",
+    "...#..#..."
+  ],
+  ["..#....#.."]
+);
+
+// WEDGE — broad armored block tapering to heavy engine pods.
+const wedgeL1 = shipFrames(
+  [
+    "...##...",
+    "..####..",
+    ".######.",
+    "########",
+    "########",
+    "###..###",
+    ".##..##.",
+    "..#..#.."
+  ],
+  [".#....#."]
+);
+const wedgeL2 = shipFrames(
+  [
+    "...##...",
+    "..####..",
+    "..####..",
+    ".######.",
+    ".######.",
+    "########",
+    "########",
+    "########",
+    "########",
+    ".######.",
+    ".##..##.",
+    "..#..#.."
+  ],
+  [".#....#."]
+);
+const wedgeL3 = shipFrames(
+  [
+    "....##....",
+    "...####...",
+    "..######..",
+    ".########.",
+    "##########",
+    "##########",
+    "##########",
+    "##.####.##",
+    ".########.",
+    ".##.##.##.",
+    "..#.##.#..",
+    "..#.##.#.."
+  ],
+  ["..#....#.."]
+);
 
 export const shipFamily: ShipFamily = {
   id: "chassis-variants",
@@ -11,16 +218,13 @@ export const shipFamily: ShipFamily = {
       name: "Bar Chassis L1",
       role: "base light frigate",
       tone: "cyan",
-      sprite: { width: 4, height: 2, lines: ["⣴⣿⣦⠀", "⢨⠿⡅⠀"] },
-      idle: [
-        { width: 4, height: 2, lines: ["⣴⣿⣦⠀", "⢨⠿⡅⠀"] },
-        { width: 4, height: 2, lines: ["⣴⣿⣦⠀", "⢨⠿⡅⠀"] }
-      ],
+      sprite: barL1.sprite,
+      idle: barL1.idle,
       tags: ["light", "base", "bar"],
       attachmentPoints: [
         { id: "left", label: "Left Wing", x: 0, y: 1, accepts: ["wing", "pod"] },
         { id: "core", label: "Core Sector", x: 1, y: 0, accepts: ["cannon", "reactor", "engine"] },
-        { id: "right", label: "Right Wing", x: 2, y: 1, accepts: ["wing", "pod"] }
+        { id: "right", label: "Right Wing", x: 3, y: 1, accepts: ["wing", "pod"] }
       ],
       stats: {
         hull: 40,
@@ -40,16 +244,13 @@ export const shipFamily: ShipFamily = {
       name: "Bar Chassis L2",
       role: "heavy long cruiser",
       tone: "cyan",
-      sprite: { width: 4, height: 3, lines: ["⣴⣿⣦⠀", "⢿⣤⡿⠀", "⢰⠛⡆⠀"] },
-      idle: [
-        { width: 4, height: 3, lines: ["⣴⣿⣦⠀", "⢿⣤⡿⠀", "⢰⠛⡆⠀"] },
-        { width: 4, height: 3, lines: ["⣴⣿⣦⠀", "⢿⣤⡿⠀", "⢰⠛⡆⠀"] }
-      ],
+      sprite: barL2.sprite,
+      idle: barL2.idle,
       tags: ["medium", "interceptor", "bar"],
       attachmentPoints: [
         { id: "left", label: "Left Wing", x: 0, y: 1, accepts: ["wing", "pod", "cannon"] },
         { id: "core", label: "Core Sector", x: 1, y: 2, accepts: ["cannon", "reactor", "engine"] },
-        { id: "right", label: "Right Wing", x: 2, y: 1, accepts: ["wing", "pod", "cannon"] }
+        { id: "right", label: "Right Wing", x: 3, y: 1, accepts: ["wing", "pod", "cannon"] }
       ],
       stats: {
         hull: 60,
@@ -69,11 +270,8 @@ export const shipFamily: ShipFamily = {
       name: "Bar Chassis L3",
       role: "colossal heavy frigate",
       tone: "cyan",
-      sprite: { width: 5, height: 3, lines: ["⣧⠾⠿⠷⣼", "⢿⢟⣛⡻⡿", "⠘⢾⣿⡷⠃"] },
-      idle: [
-        { width: 5, height: 3, lines: ["⣧⠾⠿⠷⣼", "⢿⢟⣛⡻⡿", "⠘⢾⣿⡷⠃"] },
-        { width: 5, height: 3, lines: ["⣧⠾⠿⠷⣼", "⢿⢟⣛⡻⡿", "⠘⢾⣿⡷⠃"] }
-      ],
+      sprite: barL3.sprite,
+      idle: barL3.idle,
       tags: ["heavy", "assault", "bar"],
       attachmentPoints: [
         { id: "left-heavy", label: "Left Cannons", x: 0, y: 1, accepts: ["cannon", "shield"] },
@@ -101,11 +299,8 @@ export const shipFamily: ShipFamily = {
       name: "Delta Chassis L1",
       role: "light delta-wing scout",
       tone: "blue",
-      sprite: { width: 4, height: 2, lines: ["⣠⣾⣷⣄", "⢏⠀⠀⡹"] },
-      idle: [
-        { width: 4, height: 2, lines: ["⣠⣾⣷⣄", "⢏⠀⠀⡹"] },
-        { width: 4, height: 2, lines: ["⣠⣾⣷⣄", "⢏⠀⠀⡹"] }
-      ],
+      sprite: deltaL1.sprite,
+      idle: deltaL1.idle,
       tags: ["light", "scout", "delta"],
       attachmentPoints: [
         { id: "left", label: "Left Wing", x: 0, y: 1, accepts: ["wing", "pod"] },
@@ -130,11 +325,8 @@ export const shipFamily: ShipFamily = {
       name: "Delta Chassis L2",
       role: "shielded tactical interceptor",
       tone: "blue",
-      sprite: { width: 4, height: 3, lines: ["⣠⣾⣷⣄", "⡿⠉⠉⢿", "⠱⡄⢠⠎"] },
-      idle: [
-        { width: 4, height: 3, lines: ["⣠⣾⣷⣄", "⡿⠉⠉⢿", "⠱⡄⢠⠎"] },
-        { width: 4, height: 3, lines: ["⣠⣾⣷⣄", "⡿⠉⠉⢿", "⠱⡄⢠⠎"] }
-      ],
+      sprite: deltaL2.sprite,
+      idle: deltaL2.idle,
       tags: ["medium", "tactical", "delta"],
       attachmentPoints: [
         { id: "left", label: "Left Shield Pod", x: 0, y: 1, accepts: ["shield", "pod"] },
@@ -159,11 +351,8 @@ export const shipFamily: ShipFamily = {
       name: "Delta Chassis L3",
       role: "tactical vanguard dreadnought",
       tone: "blue",
-      sprite: { width: 5, height: 3, lines: ["⢀⣴⣿⣦⡀", "⣿⠋⠉⠙⣿", "⠣⣄⠀⣠⠜"] },
-      idle: [
-        { width: 5, height: 3, lines: ["⢀⣴⣿⣦⡀", "⣿⠋⠉⠙⣿", "⠣⣄⠀⣠⠜"] },
-        { width: 5, height: 3, lines: ["⢀⣴⣿⣦⡀", "⣿⠋⠉⠙⣿", "⠣⣄⠀⣠⠜"] }
-      ],
+      sprite: deltaL3.sprite,
+      idle: deltaL3.idle,
       tags: ["heavy", "vanguard", "delta"],
       attachmentPoints: [
         { id: "left-outer", label: "Outer Left Wing", x: 0, y: 2, accepts: ["wing", "cannon"] },
@@ -191,11 +380,8 @@ export const shipFamily: ShipFamily = {
       name: "Ring Chassis L1",
       role: "light energy saucer",
       tone: "purple",
-      sprite: { width: 4, height: 2, lines: ["⣴⠋⠙⣦", "⠻⣄⣠⠟"] },
-      idle: [
-        { width: 4, height: 2, lines: ["⣴⠋⠙⣦", "⠻⣄⣠⠟"] },
-        { width: 4, height: 2, lines: ["⣴⠋⠙⣦", "⠻⣄⣠⠟"] }
-      ],
+      sprite: ringL1.sprite,
+      idle: ringL1.idle,
       tags: ["light", "saucer", "ring"],
       attachmentPoints: [
         { id: "ring-left", label: "Left Node", x: 0, y: 0, accepts: ["pod", "shield"] },
@@ -220,11 +406,8 @@ export const shipFamily: ShipFamily = {
       name: "Ring Chassis L2",
       role: "stabilized energy cruiser",
       tone: "purple",
-      sprite: { width: 4, height: 3, lines: ["⣴⠋⠙⣦", "⣿⠘⠃⣿", "⠻⣄⣠⠟"] },
-      idle: [
-        { width: 4, height: 3, lines: ["⣴⠋⠙⣦", "⣿⠘⠃⣿", "⠻⣄⣠⠟"] },
-        { width: 4, height: 3, lines: ["⣴⠋⠙⣦", "⣿⠘⠃⣿", "⠻⣄⣠⠟"] }
-      ],
+      sprite: ringL2.sprite,
+      idle: ringL2.idle,
       tags: ["medium", "cruiser", "ring"],
       attachmentPoints: [
         { id: "wing-left", label: "Left Node", x: 0, y: 0, accepts: ["pod", "shield", "cannon"] },
@@ -249,11 +432,8 @@ export const shipFamily: ShipFamily = {
       name: "Ring Chassis L3",
       role: "heavy singularity dreadnought",
       tone: "purple",
-      sprite: { width: 5, height: 3, lines: ["⣠⠞⠉⠳⣄", "⣿⠰⣿⠆⣿", "⠙⢦⣀⡴⠋"] },
-      idle: [
-        { width: 5, height: 3, lines: ["⣠⠞⠉⠳⣄", "⣿⠰⣿⠆⣿", "⠙⢦⣀⡴⠋"] },
-        { width: 5, height: 3, lines: ["⣠⠞⠉⠳⣄", "⣿⠰⣿⠆⣿", "⠙⢦⣀⡴⠋"] }
-      ],
+      sprite: ringL3.sprite,
+      idle: ringL3.idle,
       tags: ["heavy", "dreadnought", "ring"],
       attachmentPoints: [
         { id: "outer-left", label: "Left Singularity Bank", x: 0, y: 0, accepts: ["cannon", "shield"] },
@@ -281,11 +461,8 @@ export const shipFamily: ShipFamily = {
       name: "Wedge Chassis L1",
       role: "broad wing striker",
       tone: "amber",
-      sprite: { width: 4, height: 2, lines: ["⣴⣿⣿⣦", "⠙⡿⢿⠋"] },
-      idle: [
-        { width: 4, height: 2, lines: ["⣴⣿⣿⣦", "⠙⡿⢿⠋"] },
-        { width: 4, height: 2, lines: ["⣴⣿⣿⣦", "⠙⡿⢿⠋"] }
-      ],
+      sprite: wedgeL1.sprite,
+      idle: wedgeL1.idle,
       tags: ["light", "striker", "wedge"],
       attachmentPoints: [
         { id: "left", label: "Left Wing", x: 0, y: 1, accepts: ["wing", "armor"] },
@@ -310,11 +487,8 @@ export const shipFamily: ShipFamily = {
       name: "Wedge Chassis L2",
       role: "heavy armor juggernaut",
       tone: "amber",
-      sprite: { width: 4, height: 3, lines: ["⣴⣿⣿⣦", "⢿⣿⣿⡿", "⠈⡿⢿⠁"] },
-      idle: [
-        { width: 4, height: 3, lines: ["⣴⣿⣿⣦", "⢿⣿⣿⡿", "⠈⡿⢿⠁"] },
-        { width: 4, height: 3, lines: ["⣴⣿⣿⣦", "⢿⣿⣿⡿", "⠈⡿⢿⠁"] }
-      ],
+      sprite: wedgeL2.sprite,
+      idle: wedgeL2.idle,
       tags: ["medium", "juggernaut", "wedge"],
       attachmentPoints: [
         { id: "left-plating", label: "Left Armor Plating", x: 0, y: 1, accepts: ["armor", "cannon"] },
@@ -339,11 +513,8 @@ export const shipFamily: ShipFamily = {
       name: "Wedge Chassis L3",
       role: "colossal flat dreadnought",
       tone: "amber",
-      sprite: { width: 5, height: 3, lines: ["⣠⣾⣿⣷⣄", "⣿⣿⣿⣿⣿", "⠘⢿⠿⡿⠃"] },
-      idle: [
-        { width: 5, height: 3, lines: ["⣠⣾⣿⣷⣄", "⣿⣿⣿⣿⣿", "⠘⢿⠿⡿⠃"] },
-        { width: 5, height: 3, lines: ["⣠⣾⣿⣷⣄", "⣿⣿⣿⣿⣿", "⠘⢿⠿⡿⠃"] }
-      ],
+      sprite: wedgeL3.sprite,
+      idle: wedgeL3.idle,
       tags: ["heavy", "bastion", "wedge"],
       attachmentPoints: [
         { id: "left-heavy", label: "Left Defense Array", x: 0, y: 1, accepts: ["cannon", "armor"] },

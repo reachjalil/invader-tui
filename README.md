@@ -30,9 +30,9 @@ The playable demo requires an interactive TTY. If the terminal is too small, the
 ```sh
 pnpm demo
 pnpm start
-pnpm snapshot -- --cols 100 --rows 30
-pnpm snapshot -- --cols 100 --rows 30 --focus ships --bg stars --border arcade --color
-pnpm snapshot -- --cols 120 --rows 36 --focus designs
+pnpm snapshot -- --cols 120 --rows 32
+pnpm snapshot -- --cols 120 --rows 32 --component ship-builder --focus options
+pnpm snapshot -- --cols 120 --rows 32 --component backgrounds --variant nebula --data dynamic --tick 7 --color
 pnpm test
 pnpm check
 ```
@@ -40,10 +40,35 @@ pnpm check
 | Command | Purpose |
 | --- | --- |
 | `pnpm demo` | Runs the playable arcade demo. |
-| `pnpm start` | Runs the animated kitchen-sink preview loop. |
-| `pnpm snapshot` | Renders one deterministic kitchen-sink frame. |
+| `pnpm start` | Runs the interactive kitchen-sink **component browser**. |
+| `pnpm snapshot` | Renders one deterministic kitchen-sink browser frame. |
 | `pnpm test` | Runs the Vitest suite. |
 | `pnpm check` | Runs TypeScript without emitting files. |
+
+### Kitchen-sink component browser
+
+`pnpm start` opens a navigable catalog of every reusable component. It is data-driven
+(modeled on the `@prettui/demo` architecture) and split into three layers:
+
+- **Registry** (`src/kitchen/registry.ts`) — each component is a `ComponentDefinition`
+  with `id`, `label`, `description`, `category`, `exportName`, and `optionGroups`
+  (`Data` = static/dynamic/empty · `Variant` = component-specific · `Size` =
+  compact/comfortable/expanded), grouped into navigation sections.
+- **Renderer** (`src/kitchen/render.ts`) — composes a left nav, a live preview, and a
+  right options/inspector pane using `@prettui/core` primitives.
+- **Interaction** (`src/kitchen/state.ts`) — a pure keyboard reducer driving the
+  `navigation → preview → options` focus model.
+
+Browser controls: `Tab` cycle focus · `↑↓`/`WS` move (item or option group) · `←→`/`AD`
+select component or change the focused option's value · `p` pause · `f` step · `q` quit.
+Snapshot flags: `--component <id> --data <static|dynamic|empty> --variant <id> --density <compact|comfortable|expanded> --focus <navigation|preview|options>`.
+
+### Built on @prettui
+
+invader-tui builds on the published [`@prettui/*`](https://www.npmjs.com/org/prettui)
+packages instead of duplicating primitives: `src/tui/ansi.ts` and `src/tui/layout.ts`
+re-export `@prettui/core` (theme, `rgb`, `fitAnsi`, `splitRatioWidths`, `hstack`,
+`bars`, …), keeping only invader-tui's richer multi-style `box` on top.
 
 ## Demo Controls
 
@@ -51,9 +76,9 @@ pnpm check
 | --- | --- |
 | Splash | `Enter` / `Space` to continue, `Q` to quit |
 | Mode select | `A/D` or arrow keys to choose Classic/Turbo, `Enter` / `Space` to continue |
-| Ship select | `Space` or `Tab` to customize the highlighted P1/COM ship, `A/D` or left/right to choose ship, `Enter` to launch as-is, `C` to toggle 1P/2P COM, `E` to edit P1/COM, `R` to reset the highlighted ship |
+| Ship select | `Space` or `Tab` to customize the highlighted ship, `A/D` or left/right to choose ship, `Enter` to launch as-is, `R` to reset the highlighted ship |
 | Ship customize | `W/S` or up/down to choose Color, Nose, Left, Right, Tail, Inside, Gun, Wing, Engine, Core, Defense, Support, or Name; `A/D` or left/right changes the selected row, `Space` returns to selection, `Enter` launches, `N` cycles presets, `R` restores stock |
-| Gameplay | `A/D` or left/right arrows to move, `Space` to shoot, COM-02 auto-pilots in 2P COM mode, `Q` to abort |
+| Gameplay | `A/D` or left/right arrows to strafe, `W/S` or up/down to thrust within the lower flight band, `Space` to fire (hold for autofire), `Q` to abort |
 | Turbo gameplay | Adds `W` toward the gate, `S` away from the gate, `Shift+A/D` or Shift+left/right to rotate through four headings, `E` for engine thrust, `X` for the charged special weapon, a route mini-map, soft camera follow near screen edges, roaming v2 enemies, loot caches, and slow rotating side asteroids |
 | Result | `R` to restart, `Q` to quit |
 
@@ -64,12 +89,13 @@ Victory restarts preserve score and advance the campaign loop. Each loop makes e
 - White stars are collectible upgrade currency.
 - Larger colorful stars grant bigger upgrade value.
 - Shield pickups temporarily bring the shield online.
-- Cloak pickups briefly break enemy targeting and let enemy fire pass through the player, while physical hazards still collide.
 - Ship customization keeps the animated ship selection first in Classic and Turbo; launch stock ships as-is or enter the builder for shape, paint, weapon, wing, engine, core, defense, support, and callsign changes.
 - Shape parts and modules change hull, shield, speed, turn rate, damage, fire rate, spread, and star affinity before launch, with the builder showing deltas against the stock chassis.
 - Ship upgrades preserve the current design while moving the selected chassis through stronger level variants.
-- 2P COM mode adds a computer-controlled wingmate that shoots, dodges, collects pickups, and can be destroyed independently.
-- Classic mode preserves the original horizontal-lane play space.
+- Classic mode is an 8-wave campaign: escalating formations with fly-in entrances and Galaga-style divers, a vanguard mini-boss at wave 4, veteran formations after it, and a full boss at wave 8.
+- Classic flight uses momentum physics: the ship's speed stat sets top velocity and turn rate sets acceleration; diving enemies can ram the hull, and a brief blink of invulnerability follows every hit.
+- Chained kills build a combo multiplier (up to x5) that resets when you take damage; wave clears pay an accuracy-scaled bonus and repair the hull.
+- The star affinity stat doubles as a tractor field, pulling pickups toward the ship and boosting their value; the spread stat adds angled shots to every volley.
 - Turbo mode is a v2 adventure run: the arena fills the terminal, the ship rotates through four clear headings (`GATE`, `EAST`, `AWAY`, `WEST`), the route mini-map shows gate distance and east/west drift, `W` moves toward the gate, `S` can fall back away from it, `E` burns the engine along the current heading, the viewport follows near edges so the world scrolls around the ship, loot caches can be collected for upgrades and route recovery, reaching the final gate opens the boss fight, smarter enemies lead/intercept your heading, large slow gray asteroids rotate in from the sides, occasional threats arrive from behind, low-motion arcade rumble stays in the background, and a smaller charged Nova-style secondary weapon clears pressure.
 - Boss waves add special enemy patterns and escort pressure.
 - The HUD only shows shield state when shield mechanics are active.
@@ -79,43 +105,45 @@ Victory restarts preserve score and advance the campaign loop. Each loop makes e
 ```text
 src/
   assets/          Typed enemy, ship, design, module, and paint catalogs
-  render/          Kitchen-sink renderer, widgets, sprite rendering
+  kitchen/         Kitchen-sink browser: registry, render, state, types
+  render/          Widgets, sprite rendering, dashboard kitchen-sink surface
   sim/             Shared state types and deterministic state builder
-  tui/             ANSI and layout primitives
-  cli.ts           Kitchen-sink CLI entrypoint
+  tui/             ANSI and layout shims over @prettui/core
+  cli.ts           Kitchen-sink browser CLI entrypoint
   demo.ts          Playable arcade demo
 ```
 
 ## Renderer Model
 
-The project keeps visual primitives small and composable:
+The project keeps visual primitives small and composable, layered on `@prettui/core`:
 
-- `src/tui/ansi.ts` handles ANSI color, width, truncation, and alignment.
-- `src/tui/layout.ts` owns boxes, borders, stacking, dividers, and frame normalization.
+- `src/tui/ansi.ts` re-exports `@prettui/core/ansi` (color, width, truncation, alignment).
+- `src/tui/layout.ts` re-exports `@prettui/core/layout` and adds invader-tui's multi-style `box`.
 - `src/render/widgets.ts` exposes reusable HUD, bar, counter, diagnostics, and catalog panels.
-- `src/render/kitchenSink.ts` composes the component library into a broad visual test surface.
+- `src/kitchen/*` turns those widgets into a data-driven, navigable component catalog.
+- `src/render/kitchenSink.ts` composes the widgets into the dashboard "overview" surface.
 - `src/demo.ts` consumes the same primitives for the playable game.
 
 That split keeps the demo from becoming a one-off rendering fork.
 
 ## Snapshot Examples
 
-Render a compact frame:
+Render the browser at a compact size:
 
 ```sh
 pnpm snapshot -- --cols 80 --rows 24
 ```
 
-Render a larger themed frame:
+Inspect a specific component with options applied:
 
 ```sh
-pnpm snapshot -- --cols 120 --rows 36 --focus enemies --bg crt --border arcade --color
+pnpm snapshot -- --cols 130 --rows 36 --component borders --variant cyberpunk --color
 ```
 
-Preview the ship builder surface:
+Preview the ship builder entry:
 
 ```sh
-pnpm snapshot -- --cols 120 --rows 36 --focus designs
+pnpm snapshot -- --cols 130 --rows 36 --component ship-builder --focus options
 ```
 
 ## Development

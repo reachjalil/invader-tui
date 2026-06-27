@@ -239,7 +239,7 @@ export const shipCosmeticParts: ShipCosmeticPart[] = [
     name: "Needle Tip",
     slotId: "nose",
     tone: "cyan",
-    marker: "^",
+    marker: "⠁",
     role: "Stock pointed command tip with neutral handling.",
     statModifiers: {}
   },
@@ -248,7 +248,7 @@ export const shipCosmeticParts: ShipCosmeticPart[] = [
     name: "Fork Tip",
     slotId: "nose",
     tone: "lime",
-    marker: "Y",
+    marker: "⠉",
     role: "Split targeting prongs widen the firing path.",
     statModifiers: { spread: 1, projectileDamage: -1 }
   },
@@ -257,7 +257,7 @@ export const shipCosmeticParts: ShipCosmeticPart[] = [
     name: "Flat Helm",
     slotId: "nose",
     tone: "slate",
-    marker: "=",
+    marker: "⠒",
     role: "Blunt armor cap that trades speed for hull.",
     statModifiers: { hull: 3, speed: -1 }
   },
@@ -266,7 +266,7 @@ export const shipCosmeticParts: ShipCosmeticPart[] = [
     name: "Beak Prow",
     slotId: "nose",
     tone: "amber",
-    marker: "V",
+    marker: "⠈",
     role: "Aggressive prow for stronger forward impact.",
     statModifiers: { projectileDamage: 2, turnRate: -1 }
   },
@@ -275,7 +275,7 @@ export const shipCosmeticParts: ShipCosmeticPart[] = [
     name: "Dome Nose",
     slotId: "nose",
     tone: "blue",
-    marker: "A",
+    marker: "⠛",
     role: "Shielded sensor dome that slows weapon cadence.",
     statModifiers: { shield: 3, fireRate: -1 }
   },
@@ -284,7 +284,7 @@ export const shipCosmeticParts: ShipCosmeticPart[] = [
     name: "Swept Left",
     slotId: "leftWing",
     tone: "cyan",
-    marker: "<",
+    marker: "⡆",
     role: "Stock swept left plane with neutral stats.",
     statModifiers: {}
   },
@@ -293,7 +293,7 @@ export const shipCosmeticParts: ShipCosmeticPart[] = [
     name: "Round Left",
     slotId: "leftWing",
     tone: "purple",
-    marker: "(",
+    marker: "⡄",
     role: "Rounded port-side fairing improves turn response.",
     statModifiers: { turnRate: 1, speed: -1 }
   },
@@ -302,7 +302,7 @@ export const shipCosmeticParts: ShipCosmeticPart[] = [
     name: "Blade Left",
     slotId: "leftWing",
     tone: "red",
-    marker: "[",
+    marker: "⡇",
     role: "Sharp port blade adds damage but thins the hull.",
     statModifiers: { projectileDamage: 1, hull: -2 }
   },
@@ -311,7 +311,7 @@ export const shipCosmeticParts: ShipCosmeticPart[] = [
     name: "Flat Left",
     slotId: "leftWing",
     tone: "slate",
-    marker: "|",
+    marker: "⡏",
     role: "Flat armor plate reinforces the left edge.",
     statModifiers: { hull: 4, turnRate: -1 }
   },
@@ -320,7 +320,7 @@ export const shipCosmeticParts: ShipCosmeticPart[] = [
     name: "Fork Left",
     slotId: "leftWing",
     tone: "lime",
-    marker: "/",
+    marker: "⠇",
     role: "Open fork fin lightens the left side.",
     statModifiers: { speed: 1, shield: -2 }
   },
@@ -329,7 +329,7 @@ export const shipCosmeticParts: ShipCosmeticPart[] = [
     name: "Swept Right",
     slotId: "rightWing",
     tone: "cyan",
-    marker: ">",
+    marker: "⢰",
     role: "Stock swept right plane with neutral stats.",
     statModifiers: {}
   },
@@ -338,7 +338,7 @@ export const shipCosmeticParts: ShipCosmeticPart[] = [
     name: "Round Right",
     slotId: "rightWing",
     tone: "purple",
-    marker: ")",
+    marker: "⢠",
     role: "Rounded starboard fairing improves turn response.",
     statModifiers: { turnRate: 1, speed: -1 }
   },
@@ -347,7 +347,7 @@ export const shipCosmeticParts: ShipCosmeticPart[] = [
     name: "Blade Right",
     slotId: "rightWing",
     tone: "red",
-    marker: "]",
+    marker: "⢸",
     role: "Sharp starboard blade adds damage but thins the hull.",
     statModifiers: { projectileDamage: 1, hull: -2 }
   },
@@ -356,7 +356,7 @@ export const shipCosmeticParts: ShipCosmeticPart[] = [
     name: "Flat Right",
     slotId: "rightWing",
     tone: "slate",
-    marker: "|",
+    marker: "⢹",
     role: "Flat armor plate reinforces the right edge.",
     statModifiers: { hull: 4, turnRate: -1 }
   },
@@ -365,7 +365,7 @@ export const shipCosmeticParts: ShipCosmeticPart[] = [
     name: "Fork Right",
     slotId: "rightWing",
     tone: "lime",
-    marker: "\\",
+    marker: "⠸",
     role: "Open fork fin lightens the right side.",
     statModifiers: { speed: 1, shield: -2 }
   },
@@ -374,7 +374,7 @@ export const shipCosmeticParts: ShipCosmeticPart[] = [
     name: "V-Tail",
     slotId: "tail",
     tone: "cyan",
-    marker: "v",
+    marker: "⣀",
     role: "Stock V thruster notch with neutral stats.",
     statModifiers: {}
   },
@@ -383,7 +383,7 @@ export const shipCosmeticParts: ShipCosmeticPart[] = [
     name: "U-Tail",
     slotId: "tail",
     tone: "blue",
-    marker: "U",
+    marker: "⣄",
     role: "Curved tail channel improves turning at low speed.",
     statModifiers: { turnRate: 1, speed: -1 }
   },
@@ -392,7 +392,7 @@ export const shipCosmeticParts: ShipCosmeticPart[] = [
     name: "Round Tail",
     slotId: "tail",
     tone: "purple",
-    marker: "o",
+    marker: "⣠",
     role: "Rounded reactor bell adds shielding but slows fire.",
     statModifiers: { shield: 2, fireRate: -1 }
   },
@@ -401,7 +401,7 @@ export const shipCosmeticParts: ShipCosmeticPart[] = [
     name: "Flat Tail",
     slotId: "tail",
     tone: "slate",
-    marker: "_",
+    marker: "⣤",
     role: "Flat tail armor adds hull at the cost of speed.",
     statModifiers: { hull: 3, speed: -1 }
   },
@@ -410,7 +410,7 @@ export const shipCosmeticParts: ShipCosmeticPart[] = [
     name: "Split Tail",
     slotId: "tail",
     tone: "lime",
-    marker: "Y",
+    marker: "⣦",
     role: "Twin exhaust split gives speed with weaker shields.",
     statModifiers: { speed: 2, shield: -3 }
   },
@@ -419,7 +419,7 @@ export const shipCosmeticParts: ShipCosmeticPart[] = [
     name: "Glass Core",
     slotId: "interior",
     tone: "cyan",
-    marker: "*",
+    marker: "⠿",
     role: "Stock glass cockpit and balanced reactor view.",
     statModifiers: {}
   },
@@ -428,7 +428,7 @@ export const shipCosmeticParts: ShipCosmeticPart[] = [
     name: "Solid Core",
     slotId: "interior",
     tone: "amber",
-    marker: "#",
+    marker: "⣿",
     role: "Armored filled interior improves hull but turns slower.",
     statModifiers: { hull: 3, turnRate: -1 }
   },
@@ -437,7 +437,7 @@ export const shipCosmeticParts: ShipCosmeticPart[] = [
     name: "Hollow Core",
     slotId: "interior",
     tone: "white",
-    marker: "O",
+    marker: "⠶",
     role: "Visible cockpit hole lightens the frame.",
     statModifiers: { speed: 1, hull: -2 }
   },
@@ -455,7 +455,7 @@ export const shipCosmeticParts: ShipCosmeticPart[] = [
     name: "Reactor Eye",
     slotId: "interior",
     tone: "red",
-    marker: "@",
+    marker: "⠫",
     role: "Exposed reactor eye boosts fire rate with less shielding.",
     statModifiers: { fireRate: 1, shield: -1 }
   }
@@ -467,7 +467,7 @@ export const shipModules: ShipModule[] = [
     name: "Pulse Cannon",
     category: "cannon",
     tone: "cyan",
-    marker: "^",
+    marker: "⠉",
     role: "Reliable centerline laser upgrade.",
     statModifiers: { projectileDamage: 4, fireRate: 1 },
     weaponName: "Pulse Laser"
@@ -477,7 +477,7 @@ export const shipModules: ShipModule[] = [
     name: "Needle Cannon",
     category: "cannon",
     tone: "blue",
-    marker: "|",
+    marker: "⠈",
     role: "Fast low-mass gun for scouts.",
     statModifiers: { fireRate: 2, projectileDamage: 1, speed: 1 },
     weaponName: "Needle Burst"
@@ -487,7 +487,7 @@ export const shipModules: ShipModule[] = [
     name: "Rail Lance",
     category: "cannon",
     tone: "amber",
-    marker: "!",
+    marker: "⠛",
     role: "Heavy kinetic barrel with slower cycling.",
     statModifiers: { projectileDamage: 8, fireRate: -1, speed: -1 },
     weaponName: "Rail Lance"
@@ -497,7 +497,7 @@ export const shipModules: ShipModule[] = [
     name: "Plasma Mortar",
     category: "cannon",
     tone: "purple",
-    marker: "*",
+    marker: "⠟",
     role: "Wide energy burst for multi-lane pressure.",
     statModifiers: { projectileDamage: 5, spread: 1, fireRate: -1 },
     weaponName: "Plasma Mortar"
@@ -507,7 +507,7 @@ export const shipModules: ShipModule[] = [
     name: "Vector Wings",
     category: "wing",
     tone: "blue",
-    marker: "/",
+    marker: "⡆",
     role: "Control surfaces that make lateral dodging sharper.",
     statModifiers: { speed: 1, turnRate: 2, hull: -3 }
   },
@@ -516,7 +516,7 @@ export const shipModules: ShipModule[] = [
     name: "Heavy Ailerons",
     category: "wing",
     tone: "amber",
-    marker: "<",
+    marker: "⡇",
     role: "Wide fins that stabilize spread weapons.",
     statModifiers: { hull: 7, spread: 1, turnRate: -1 }
   },
@@ -525,7 +525,7 @@ export const shipModules: ShipModule[] = [
     name: "Heat Vanes",
     category: "wing",
     tone: "red",
-    marker: "~",
+    marker: "⠆",
     role: "External cooling that lets guns cycle harder.",
     statModifiers: { fireRate: 2, shield: -4 }
   },
@@ -534,7 +534,7 @@ export const shipModules: ShipModule[] = [
     name: "Targeting Pod",
     category: "pod",
     tone: "lime",
-    marker: "+",
+    marker: "⠂",
     role: "Compact sighting package for cleaner shots.",
     statModifiers: { projectileDamage: 2, powerUpAffinity: 1 }
   },
@@ -543,7 +543,7 @@ export const shipModules: ShipModule[] = [
     name: "Collector Pod",
     category: "pod",
     tone: "white",
-    marker: "$",
+    marker: "⠦",
     role: "Magnetized star recovery capsule.",
     statModifiers: { powerUpAffinity: 3, speed: -1 }
   },
@@ -552,7 +552,7 @@ export const shipModules: ShipModule[] = [
     name: "Repair Pod",
     category: "pod",
     tone: "green",
-    marker: "+",
+    marker: "⠿",
     role: "Field repair bay with extra hull reserve.",
     statModifiers: { hull: 12, fireRate: -1 }
   },
@@ -561,7 +561,7 @@ export const shipModules: ShipModule[] = [
     name: "Balanced Reactor",
     category: "reactor",
     tone: "cyan",
-    marker: "o",
+    marker: "⠿",
     role: "Steady output with broad compatibility.",
     statModifiers: { hull: 4, shield: 4, fireRate: 1 }
   },
@@ -570,7 +570,7 @@ export const shipModules: ShipModule[] = [
     name: "Overdrive Core",
     category: "reactor",
     tone: "red",
-    marker: "x",
+    marker: "⣶",
     role: "Unstable power plant for fast attack builds.",
     statModifiers: { speed: 2, fireRate: 2, shield: -8 }
   },
@@ -579,7 +579,7 @@ export const shipModules: ShipModule[] = [
     name: "Capacitor Reactor",
     category: "reactor",
     tone: "purple",
-    marker: "O",
+    marker: "⣿",
     role: "Energy buffer for shield-heavy ships.",
     statModifiers: { shield: 14, projectileDamage: 2, speed: -1 }
   },
@@ -588,7 +588,7 @@ export const shipModules: ShipModule[] = [
     name: "Fortress Reactor",
     category: "reactor",
     tone: "amber",
-    marker: "#",
+    marker: "⣷",
     role: "Dense reactor casing for armored frames.",
     statModifiers: { hull: 16, shield: 6, speed: -2 }
   },
@@ -597,7 +597,7 @@ export const shipModules: ShipModule[] = [
     name: "Micro Thrusters",
     category: "engine",
     tone: "cyan",
-    marker: "v",
+    marker: "⣀",
     role: "Small rear thrusters with no handling penalty.",
     statModifiers: { speed: 1, turnRate: 1 }
   },
@@ -606,7 +606,7 @@ export const shipModules: ShipModule[] = [
     name: "Slipstream Drive",
     category: "engine",
     tone: "blue",
-    marker: ">",
+    marker: "⣄",
     role: "High acceleration engine for narrow escapes.",
     statModifiers: { speed: 3, hull: -6, fireRate: 1 }
   },
@@ -615,7 +615,7 @@ export const shipModules: ShipModule[] = [
     name: "Brake Stabilizer",
     category: "engine",
     tone: "slate",
-    marker: "=",
+    marker: "⣤",
     role: "Controlled movement and stable firing.",
     statModifiers: { turnRate: 3, projectileDamage: 1, speed: -1 }
   },
@@ -624,7 +624,7 @@ export const shipModules: ShipModule[] = [
     name: "Aegis Emitter",
     category: "shield",
     tone: "blue",
-    marker: ")",
+    marker: "⠿",
     role: "Compact shield projector for exposed hardpoints.",
     statModifiers: { shield: 18, speed: -1 }
   },
@@ -633,7 +633,7 @@ export const shipModules: ShipModule[] = [
     name: "Phase Bulwark",
     category: "shield",
     tone: "purple",
-    marker: "]",
+    marker: "⣿",
     role: "Energy wall tuned for boss volleys.",
     statModifiers: { shield: 26, fireRate: -1, turnRate: -1 }
   },
@@ -642,7 +642,7 @@ export const shipModules: ShipModule[] = [
     name: "Ablative Plating",
     category: "armor",
     tone: "amber",
-    marker: "[",
+    marker: "⣷",
     role: "Cheap layered armor for collision survival.",
     statModifiers: { hull: 18, speed: -1 }
   },
@@ -651,7 +651,7 @@ export const shipModules: ShipModule[] = [
     name: "Reactive Armor",
     category: "armor",
     tone: "red",
-    marker: "{",
+    marker: "⣶",
     role: "Explosive armor that boosts heavy weapon impact.",
     statModifiers: { hull: 12, projectileDamage: 4, turnRate: -1 }
   },
@@ -660,7 +660,7 @@ export const shipModules: ShipModule[] = [
     name: "Evasion AI",
     category: "autopilot",
     tone: "lime",
-    marker: "?",
+    marker: "⠶",
     role: "Assist computer for quick lateral correction.",
     statModifiers: { turnRate: 3, speed: 1, powerUpAffinity: 1 }
   },
@@ -669,7 +669,7 @@ export const shipModules: ShipModule[] = [
     name: "Gunner AI",
     category: "autopilot",
     tone: "white",
-    marker: "!",
+    marker: "⠛",
     role: "Firing assistant that favors weapon cadence.",
     statModifiers: { fireRate: 2, projectileDamage: 2, shield: -4 }
   }
@@ -976,12 +976,55 @@ export function getShipDesignWeaponName(design: ShipDesign, level = 1): string {
   return cannon?.weaponName ?? config.weaponNames[Math.max(0, Math.min(2, Math.floor(level) - 1))] ?? config.weaponNames[0];
 }
 
+// Shared Braille accent glyphs for cosmetic overlays so customization reads as
+// directional protrusions on the dot-matrix hull rather than foreign ASCII.
+const BRAILLE_ACCENT = {
+  topLeft: "⠈",
+  topRight: "⠁",
+  bottomLeft: "⡀",
+  bottomRight: "⢀",
+  edgeLeft: "⡆",
+  edgeRight: "⢰",
+  cap: "⠒",
+  dome: "⠿",
+  point: "⠇",
+  dot: "⠂"
+} as const;
+
+const BRAILLE_BASE = 0x2800;
+const BRAILLE_BLANK = String.fromCodePoint(BRAILLE_BASE);
+
+function brailleMask(char: string | undefined): number | undefined {
+  const code = char?.codePointAt(0);
+  if (code === undefined || code < BRAILLE_BASE || code > 0x28ff) return undefined;
+  return code - BRAILLE_BASE;
+}
+
+function countDots(mask: number): number {
+  let count = 0;
+  for (let bit = mask; bit > 0; bit >>= 1) count += bit & 1;
+  return count;
+}
+
+// Hulls are dense Braille dot art, so markers blend at the dot level instead
+// of replacing whole cells: a space carves an open hole, marker dots union
+// onto sparse edge cells (reading as protruding parts), and on dense armor
+// cells the marker is engraved as a negative imprint to keep the silhouette.
+function blendMarker(base: string | undefined, marker: string): string {
+  if (marker === " ") return BRAILLE_BLANK;
+  const baseMask = brailleMask(base);
+  const markerMask = brailleMask(marker);
+  if (baseMask === undefined || markerMask === undefined) return marker;
+  const blended = countDots(baseMask) >= 4 ? baseMask & ~markerMask : baseMask | markerMask;
+  return String.fromCodePoint(BRAILLE_BASE + blended);
+}
+
 function overlayModuleMarkers(frame: ShipVariant["sprite"], slots: { point: AttachmentPoint; module?: ShipModule }[]): ShipVariant["sprite"] {
   const lines = frame.lines.map((line) => Array.from(line));
   const put = (x: number, y: number, marker: string) => {
     const row = lines[y];
     if (!row || x < 0 || x >= row.length) return;
-    row[x] = marker;
+    row[x] = blendMarker(row[x], marker);
   };
 
   for (const slot of slots) {
@@ -1030,7 +1073,7 @@ function overlayCosmeticParts(frame: ShipVariant["sprite"], cosmetics: ShipCosme
   const put = (x: number, y: number, marker: string) => {
     const row = lines[y];
     if (!row || x < 0 || x >= row.length) return;
-    row[x] = marker;
+    row[x] = blendMarker(row[x], marker);
   };
 
   for (const part of cosmetics) {
@@ -1039,63 +1082,63 @@ function overlayCosmeticParts(frame: ShipVariant["sprite"], cosmetics: ShipCosme
 
     if (part.slotId === "nose") {
       if (part.id === "nose-fork") {
-        put(x - 1, y + 1, "/");
-        put(x + 1, y + 1, "\\");
+        put(x - 1, y + 1, BRAILLE_ACCENT.bottomLeft);
+        put(x + 1, y + 1, BRAILLE_ACCENT.bottomRight);
       } else if (part.id === "nose-flat") {
-        put(x - 1, y, "=");
-        put(x + 1, y, "=");
+        put(x - 1, y, BRAILLE_ACCENT.cap);
+        put(x + 1, y, BRAILLE_ACCENT.cap);
       } else if (part.id === "nose-beak") {
-        put(x, y + 1, "!");
+        put(x, y + 1, BRAILLE_ACCENT.point);
       } else if (part.id === "nose-dome") {
-        put(x, y + 1, "O");
+        put(x, y + 1, BRAILLE_ACCENT.dome);
       }
     } else if (part.slotId === "leftWing") {
       if (part.id === "left-round") {
-        put(x + 1, y, "o");
+        put(x + 1, y, BRAILLE_ACCENT.dot);
       } else if (part.id === "left-blade") {
-        put(x + 1, y, "<");
+        put(x + 1, y, BRAILLE_ACCENT.edgeLeft);
       } else if (part.id === "left-flat") {
-        put(x + 1, y, "|");
+        put(x + 1, y, BRAILLE_ACCENT.edgeLeft);
       } else if (part.id === "left-fork") {
-        put(x + 1, y - 1, "/");
-        put(x + 1, y + 1, "\\");
+        put(x + 1, y - 1, BRAILLE_ACCENT.topLeft);
+        put(x + 1, y + 1, BRAILLE_ACCENT.bottomLeft);
       } else {
-        put(x + 1, y, "<");
+        put(x + 1, y, BRAILLE_ACCENT.dot);
       }
     } else if (part.slotId === "rightWing") {
       if (part.id === "right-round") {
-        put(x - 1, y, "o");
+        put(x - 1, y, BRAILLE_ACCENT.dot);
       } else if (part.id === "right-blade") {
-        put(x - 1, y, ">");
+        put(x - 1, y, BRAILLE_ACCENT.edgeRight);
       } else if (part.id === "right-flat") {
-        put(x - 1, y, "|");
+        put(x - 1, y, BRAILLE_ACCENT.edgeRight);
       } else if (part.id === "right-fork") {
-        put(x - 1, y - 1, "\\");
-        put(x - 1, y + 1, "/");
+        put(x - 1, y - 1, BRAILLE_ACCENT.topRight);
+        put(x - 1, y + 1, BRAILLE_ACCENT.bottomRight);
       } else {
-        put(x - 1, y, ">");
+        put(x - 1, y, BRAILLE_ACCENT.dot);
       }
     } else if (part.slotId === "tail") {
       if (part.id === "tail-u") {
-        put(x - 1, y, "\\");
-        put(x + 1, y, "/");
+        put(x - 1, y, BRAILLE_ACCENT.bottomLeft);
+        put(x + 1, y, BRAILLE_ACCENT.bottomRight);
       } else if (part.id === "tail-round") {
-        put(x - 1, y, "(");
-        put(x + 1, y, ")");
+        put(x - 1, y, BRAILLE_ACCENT.bottomLeft);
+        put(x + 1, y, BRAILLE_ACCENT.bottomRight);
       } else if (part.id === "tail-flat") {
-        put(x - 1, y, "_");
-        put(x + 1, y, "_");
+        put(x - 1, y, BRAILLE_ACCENT.bottomLeft);
+        put(x + 1, y, BRAILLE_ACCENT.bottomRight);
       } else if (part.id === "tail-split") {
-        put(x - 1, y, "v");
-        put(x + 1, y, "v");
+        put(x - 1, y, BRAILLE_ACCENT.bottomLeft);
+        put(x + 1, y, BRAILLE_ACCENT.bottomRight);
       }
     } else if (part.slotId === "interior") {
       if (part.id === "inside-open") {
-        put(x - 1, y, ".");
-        put(x + 1, y, ".");
+        put(x - 1, y, BRAILLE_ACCENT.dot);
+        put(x + 1, y, BRAILLE_ACCENT.dot);
       } else if (part.id === "inside-eye") {
-        put(x - 1, y, "<");
-        put(x + 1, y, ">");
+        put(x - 1, y, BRAILLE_ACCENT.edgeLeft);
+        put(x + 1, y, BRAILLE_ACCENT.edgeRight);
       }
     }
   }

@@ -12,6 +12,7 @@
     "start": "tsx src/cli.ts start",
     "snapshot": "tsx src/cli.ts snapshot",
     "demo": "tsx src/demo.ts",
+    "ship-playground": "tsx src/shipPlayground.ts",
     "check": "tsc --noEmit",
     "test": "vitest run"
   },
@@ -20,5 +21,9 @@
     "tsx": "^4.20.0",
     "typescript": "^5.8.0",
     "vitest": "^3.2.0"
+  },
+  "dependencies": {
+    "@prettui/components": "^0.1.1",
+    "@prettui/core": "^0.1.1"
   }
 }

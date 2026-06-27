@@ -1,4 +1,4 @@
-import { enemySpecies, shipFamily, type GameAssetVariant, type SpriteFrame } from "../assets/index.js";
+import { enemySpecies, shipFamily, turboEnemySpecies, type GameAssetVariant, type SpriteFrame } from "../assets/index.js";
 import { fitAnsi, rgb, theme, visibleLength } from "../tui/ansi.js";
 
 const toneColors = {
@@ -29,7 +29,7 @@ export function validateSpriteFrame(frame: SpriteFrame): string[] {
 
 export function validateAssetCatalog(): string[] {
   const errors: string[] = [];
-  for (const variant of [...enemySpecies.variants, ...shipFamily.variants]) {
+  for (const variant of [...enemySpecies.variants, ...turboEnemySpecies.variants, ...shipFamily.variants]) {
     const frames = [variant.sprite, ...(variant.idle ?? [])];
     frames.forEach((frame, index) => {
       for (const error of validateSpriteFrame(frame)) {

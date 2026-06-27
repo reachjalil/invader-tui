@@ -72,13 +72,32 @@ describe("phase one kitchen sink", () => {
         interior: "inside-hollow"
       }
     }), 1);
+    const alternate = resolveShipDesign(buildDefaultShipDesign("bar", {
+      cosmetics: {
+        nose: "nose-dome",
+        leftWing: "left-flat",
+        rightWing: "right-flat",
+        tail: "tail-split",
+        interior: "inside-solid"
+      }
+    }), 1);
     const silhouette = custom.variant.sprite.lines.join("\n");
+    const stockSilhouette = stock.variant.sprite.lines.join("\n");
+    const alternateSilhouette = alternate.variant.sprite.lines.join("\n");
 
     expect(custom.cosmetics.map((part) => part.name)).toContain("Fork Tip");
     expect(custom.cosmetics.map((part) => part.name)).toContain("Hollow Core");
-    expect(silhouette).toContain("Y");
-    expect(silhouette).toContain("U");
-    expect(silhouette).toContain("O");
+    // Cosmetic markers blend into the hull at the Braille dot level (see
+    // blendMarker in shipDesign.ts), so every line stays pure Braille and
+    // different part choices produce distinct silhouettes.
+    expect(silhouette).not.toBe(stockSilhouette);
+    expect(alternateSilhouette).not.toBe(stockSilhouette);
+    expect(alternateSilhouette).not.toBe(silhouette);
+    for (const char of silhouette.replaceAll("\n", "")) {
+      const code = char.codePointAt(0)!;
+      expect(code).toBeGreaterThanOrEqual(0x2800);
+      expect(code).toBeLessThanOrEqual(0x28ff);
+    }
     expect(custom.stats.hull).toBeLessThan(stock.stats.hull);
     expect(custom.stats.spread).toBeGreaterThan(stock.stats.spread);
   });
